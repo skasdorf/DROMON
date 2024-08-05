@@ -1,0 +1,16 @@
+Improved Display of Curved Elements
+
+The first method is to load the surface midpoints by clicking "Read Midpoints" (note: a bug prevents this from working in ParaView 3.8.1-RC1).
+
+The other method is to use averaged surface normal.
+
+    Load internal volume by click "Read Internal Volume" and Apply.
+    Hide the "External Surface" by clicking on the eye icon to it's left in the Pipeline Browser.
+    Select the "Internal Volume" in the Pipeline Browser.
+    Apply "Filter -> Alphabetical -> Extract Surface"
+    Then filter the extracted surface "Filter -> Alphabetical -> General Surface Normal"
+    Adjust the "Feature Angle" property if sharp creases appear in areas which should be smooth, or vice versa.
+
+A third approach combines the first two. Generating surface normals when midpoints are loaded produces better results than either approach alone.
+
+https://confluence.slac.stanford.edu/display/AdvComp/ParaView

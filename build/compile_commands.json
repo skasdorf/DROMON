@@ -1,0 +1,72 @@
+[
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/mesh.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/mesh.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/mesh.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/GeomBase.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/GeomBase.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/GeomBase.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/MeshGenerator.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/MeshGenerator.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/MeshGenerator.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/Point.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/Point.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/Point.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/DataOut.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/DataOut.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/DataOut.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/MeshBase.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/MeshBase.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/MeshBase.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/FEBase.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/FEBase.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/FEBase.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/FE_HdivMaxOrtho.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/FE_HdivMaxOrtho.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/FE_HdivMaxOrtho.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/MultiIndex.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/MultiIndex.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/MultiIndex.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/FECollection.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/FECollection.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/FECollection.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/DoFHandler.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/DoFHandler.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/DoFHandler.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/DoFGeom.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/DoFGeom.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/DoFGeom.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/DoFBase.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/DoFBase.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/DoFBase.cpp"
+},
+{
+  "directory": "/home/skasdorf/Documents/DROMON-main/build",
+  "command": "/usr/bin/g++ -DDROMON_EXPORTS -I/home/skasdorf/Documents/DROMON-main/source -I/home/skasdorf/Documents/DROMON-main/include -g -DDEBUG -DMKL_Complex16=\"std::complex<double>\" -fPIC -fopenmp -std=gnu++17 -o CMakeFiles/DROMON.dir/source/DoFGeomBase.cpp.o -c /home/skasdorf/Documents/DROMON-main/source/DoFGeomBase.cpp",
+  "file": "/home/skasdorf/Documents/DROMON-main/source/DoFGeomBase.cpp"
+}
+]

@@ -1,0 +1,148 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install",
+			"include"
+		],
+		"files" : 
+		[
+			"cmake/Installing.cmake",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 112,
+				"parent" : 0
+			},
+			{
+				"file" : 0,
+				"parent" : 1
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 9,
+				"parent" : 2
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 21,
+				"parent" : 2
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 41,
+				"parent" : 2
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"libDROMONd.so"
+			],
+			"targetId" : "DROMON::@6890427a1f51a3e7e1df",
+			"targetIndex" : 0,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Unspecified",
+			"destination" : "include/DROMON",
+			"paths" : 
+			[
+				"include/AdjointExcitations.h",
+				"include/DoFMask.h",
+				"include/MatrixSolving.h",
+				"include/config.h",
+				"include/EFIEIntegrator.h",
+				"include/MatrixSolvingPolicies.h",
+				"include/DataOut.h",
+				"include/ErrorEstimation.h",
+				"include/MeshBase.h",
+				"include/DIRECTFN_ET_Bounds_Functions.h",
+				"include/Excitations.h",
+				"include/MeshGenerator.h",
+				"include/DIRECTFN_ET_Singular.h",
+				"include/FEBase.h",
+				"include/mesh.h",
+				"include/DIRECTFN_Singular.h",
+				"include/FECollection.h",
+				"include/MultiIndex.h",
+				"include/DIRECTFN_ST_Bounds_Functions.h",
+				"include/FE_HdivMaxOrtho.h",
+				"include/Point.h",
+				"include/DIRECTFN_ST_Singular.h",
+				"include/GalerkinSystem.h",
+				"include/PostProcessing.h",
+				"include/DIRECTFN_VT_Bounds_Functions.h",
+				"include/GeomBase.h",
+				"include/QuadratureCollection.h",
+				"include/DIRECTFN_VT_Singular.h",
+				"include/IntegratorBase.h",
+				"include/Refinement.h",
+				"include/DoFBase.h",
+				"include/IteratorRanger.h",
+				"include/SubMatrix.h",
+				"include/DoFGeomBase.h",
+				"include/Kernels.h",
+				"include/UniformIntegrator.h",
+				"include/DoFGeom.h",
+				"include/LegendrePFast.h",
+				"include/utility.h",
+				"include/DoFHandler.h",
+				"include/Materials.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"exportName" : "DROMONTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "DROMON::@6890427a1f51a3e7e1df",
+					"index" : 0
+				}
+			],
+			"paths" : 
+			[
+				"CMakeFiles/Export/cmake/DROMONTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 5,
+			"component" : "Unspecified",
+			"destination" : "cmake",
+			"paths" : 
+			[
+				"build/DROMONConfig.cmake",
+				"build/DROMONConfigVersion.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	}
+}
