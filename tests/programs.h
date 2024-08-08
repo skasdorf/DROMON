@@ -942,8 +942,8 @@ void AdaptiveSolver<dim, spacedim,
     for (unsigned int i =0; i < this->current_adjoint_solution.size(); ++i)
     {
       //// forward_excitation_HO_HOPS is \delta G, forward_system_HO_HOPS is \deltaL * JS
-      // gradient += (this->forward_excitation_HO_HOPS[i] - this->forward_system_HO_HOPS[i])*std::conj(this->current_adjoint_solution[i]);// * wave;
-      gradient += -this->forward_system_HO_HOPS[i]*(std::conj(this->current_adjoint_solution[i]));
+      gradient += (this->forward_excitation_HO_HOPS[i] - this->forward_system_HO_HOPS[i])*std::conj(this->current_adjoint_solution[i]);// * wave;
+      // gradient += -this->forward_system_HO_HOPS[i]*(std::conj(this->current_adjoint_solution[i]));
 
       // std::cout << "deltaG: " << this->forward_excitation_HO_HOPS[i] << "   deltaL*u: " << this->forward_system_HO_HOPS[i] << std::endl;
     }

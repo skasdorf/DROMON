@@ -44,12 +44,14 @@ int main() {
   int runMode = 1;
 
   //1 for material params, 2 for frequency, 3 for radius
-  int perturbVar = 1;
+  int perturbVar = 3;
 
   //perturbation size
-  double perturbSize = 1.01;
+  // double perturbSize = 1.0000001;
+  double perturbSize = 1.0001;
 
-  unsigned int n_cells_per_dim = 7;
+
+  unsigned int n_cells_per_dim = 8;
   freq = 500.0e6;
 
 
@@ -63,7 +65,7 @@ int main() {
     {
       case 1:
       {
-        std::ifstream inFile("normalDist_eps.txt");
+        std::ifstream inFile("./inputDist/normalDist_eps.txt");
         double a;
         while(inFile >> a){
           normalDist.push_back(a);
@@ -72,7 +74,7 @@ int main() {
       }
       case 2:
       {
-        std::ifstream inFile("normalDist.txt");
+        std::ifstream inFile("./inputDist/normalDist_f.txt");
         double a;
         while(inFile >> a){
           normalDist.push_back(a);
@@ -81,7 +83,7 @@ int main() {
       }
       case 3:
       {
-        std::ifstream inFile("normalDist_eps.txt");
+        std::ifstream inFile("./inputDist/normalDist_R.txt");
         double a;
         while(inFile >> a){
           normalDist.push_back(a);
@@ -112,7 +114,7 @@ int main() {
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(normalDist[i], 1.0, false, false)));
           sidelength = 1.0;
-          saveName = "MC_mu1_sig0p1_Gcheck1.txt";
+          saveName = "./output/MC_mu80_sig3_plate_analyt.txt";
           
 
           break;
@@ -126,7 +128,7 @@ int main() {
           dromon::Material<double>(1.0, 1.0, false, false)));
           sidelength = 1.0;
           freq = normalDist[i];
-          saveName = "MC_mu400_sig25_Gcheck.txt";
+          saveName = "./output/MC_mu400_sig25_Gcheck.txt";
 
           break;
         }
@@ -140,7 +142,7 @@ int main() {
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
           sidelength = normalDist[i];
-          saveName = "MC_mu1_sig0p1_Gcheck.txt";
+          saveName = "./output/MC_mu1_sig0p1_sphere.txt";
 
           break;
 
@@ -152,11 +154,12 @@ int main() {
       Mesh<2, 3, CUBICP> mesh;
       Point<3, double> center = {0.0, 0.0, 0.0};
 
-      MeshGenerator::square_plate(mesh, center, sidelength,
-                                      n_cells_per_dim);
+      // MeshGenerator::square_plate(mesh, center, sidelength,
+      //                                 n_cells_per_dim);
 
-      // MeshGenerator::hyper_sphere(mesh, center, sidelength,
-      //                                     n_cells_per_dim);
+      MeshGenerator::hyper_sphere(mesh, center, sidelength,
+                                          n_cells_per_dim);
+
 
       Problems::AdaptiveSolver solver(&mesh, &mat_dom, 1, 10 ,5,5,5,5);
       solver.set_plane_wave_excitation(freq, {1.0,0.0});
@@ -164,7 +167,7 @@ int main() {
 
       double theta_sc = constants<double>::PI / 2.0;
       double phi_sc = 0.0;
-      double R_dist_scalar = 1000.0;
+      double R_dist_scalar = 100.0;
       // R_dist_scalar *= wave;
       solver.set_scattering_parameters(theta_sc,phi_sc,R_dist_scalar,{0.0,0.0,1.0});
 
@@ -255,17 +258,17 @@ int main() {
       Mesh<2, 3, CUBICP> mesh;
       Point<3, double> center = {0.0, 0.0, 0.0};
 
-      MeshGenerator::hyper_sphere(mesh, center, sidelength,
-                                          n_cells_per_dim);
+      // MeshGenerator::hyper_sphere(mesh, center, sidelength,
+      //                                     n_cells_per_dim);
 
 
-      // MeshGenerator::square_plate(mesh, center, sidelength,
-      //                                 n_cells_per_dim);
+      MeshGenerator::square_plate(mesh, center, sidelength,
+                                      n_cells_per_dim);
 
 
 
       // double freq = 285e6;
-      Problems::AdaptiveSolver solver(&mesh, &mat_dom, 1, 10 ,5,5,5,5);
+      Problems::AdaptiveSolver solver(&mesh, &mat_dom, 1, 5 ,5,5,5,5);
       solver.set_plane_wave_excitation(freq, {1.0,0.0});
       std::cout << std::setprecision(12);
       double theta_sc = constants<double>::PI / 2.0;

@@ -405,7 +405,7 @@ void DIRECTFN_ST2<DoFParent<2, 3, Real>, CoefficientType, Real>::
                                                             : unitary_test_v,
                                 dof_trial.direction == u_dir ? unitary_trial_u
                                                              : unitary_trial_v,
-                                kernel_value, R);
+                                kernel_value, R, r_test, r_trial);
                   //   temp_matrix(dof_test_index, dof_trial_index) +=
                   //   value_to_add;
                   temp_matrix.accumulate(dof_test_index, dof_trial_index,
@@ -652,7 +652,7 @@ void DIRECTFN_ST2<DoFParent<2, 3, Real>, CoefficientType, Real>::
                                                             : unitary_test_v,
                                 dof_trial.direction == u_dir ? unitary_trial_u
                                                              : unitary_trial_v,
-                                kernel_value, R);
+                                kernel_value, R, r_test, r_trial);
 
                 };
                 Real error = 0;

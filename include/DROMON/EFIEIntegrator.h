@@ -206,7 +206,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate(
                                                               const Point<2, Real>& trial_values,
                                const Point<DoFCellType::space_dim, Real> &unitary_test,
                                const Point<DoFCellType::space_dim, Real> &unitary_trial,
-                               const CoefficientType &kernel_value, Real R)
+                               const CoefficientType &kernel_value, Real R, const Point<DoFCellType::space_dim, Real> r_test, const Point<DoFCellType::space_dim, Real> r_trial)
   {
 
         // std::cout << "R value in combined_integrand: " << R << std::endl;
@@ -338,7 +338,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_HOPS(
                                                               const Point<2, Real>& trial_values,
                                const Point<DoFCellType::space_dim, Real> &unitary_test,
                                const Point<DoFCellType::space_dim, Real> &unitary_trial,
-                               const CoefficientType &kernel_value, Real R)
+                               const CoefficientType &kernel_value, Real R, const Point<DoFCellType::space_dim, Real> r_test, const Point<DoFCellType::space_dim, Real> r_trial)
   {
 
         // std::cout << "sqrt(epsmu): " << sqrt(exterior_material.eps*exterior_material.mu) << std::endl;
@@ -399,7 +399,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_HOPS(
                                                               const Point<2, Real>& trial_values,
                                const Point<DoFCellType::space_dim, Real> &unitary_test,
                                const Point<DoFCellType::space_dim, Real> &unitary_trial,
-                               const CoefficientType &kernel_value, Real R)
+                               const CoefficientType &kernel_value, Real R, const Point<DoFCellType::space_dim, Real> r_test, const Point<DoFCellType::space_dim, Real> r_trial)
   {
 
         // std::cout << "R value in combined_integrand: " << R << std::endl;
@@ -541,7 +541,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
                                                               const Point<2, Real>& trial_values,
                                const Point<DoFCellType::space_dim, Real> &unitary_test,
                                const Point<DoFCellType::space_dim, Real> &unitary_trial,
-                               const CoefficientType &kernel_value, Real R)
+                               const CoefficientType &kernel_value, Real R, const Point<DoFCellType::space_dim, Real> r_test, const Point<DoFCellType::space_dim, Real> r_trial)
   {
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -572,7 +572,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
         else if (perturbVar == 2){
           double omegaPerturb = excitation.omega * perturbSize;
 
-          // g = kernels::g(R, omegaPerturb, exterior_material.epsr, exterior_material.mur);
+          g = kernels::g(R, omegaPerturb, exterior_material.epsr, exterior_material.mur);
           interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*omegaPerturb;
           interm_comp_1 = test_values(1)*trial_values(1)/omegaPerturb;
           // temp_out = g*(interm_comp_0*exterior_material.mu + interm_comp_1/exterior_material.eps);
@@ -583,7 +583,11 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
         // perturbed radius
         else if (perturbVar == 3){
 
-          double Rperturb = R * perturbSize;
+          // Pour_testP *= perturbSize;
+          // r_trial *= perturbSize;
+
+          // double Rperturb = R * perturbSize;
+          double Rperturb = (r_test*perturbSize - r_trial*perturbSize).norm();
 
           g = kernels::g(Rperturb, excitation.omega, exterior_material.epsr, exterior_material.mur);
           interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*excitation.omega;
@@ -859,7 +863,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_regular(
                                                                                 : unitary_test_v,
                                                     dof_trial.direction == u_dir ? unitary_trial_u
                                                                                  : unitary_trial_v,
-                                                    kernel_value, R);
+                                                    kernel_value, R, r_test, r_trial);
                 temp_matrix.accumulate(dof_test_index, dof_trial_index,value_to_add);
 
               }

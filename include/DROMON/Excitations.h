@@ -91,7 +91,7 @@ PlaneWave<3, Real>::PlaneWave(const Real& frequency, const Point<2, std::complex
       (materialData.get_material_domain(0))
           .get_exterior();
   double epsr = exterior_material.epsr;
-  // this->gamma = this->gamma * sqrt(epsr);
+  this->gamma = this->gamma * sqrt(epsr);
   this->set_incident_direction(theta_inc, phi_inc);
   E_mag_cart = E_mag(0)*theta_hat + E_mag(1)*phi_hat;
 }

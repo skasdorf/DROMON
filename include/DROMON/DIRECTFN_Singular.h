@@ -557,7 +557,7 @@ DROMON_NAMESPACE_OPEN
                                                     wgl_psi->operator[](psi_index) * wgl_u->operator[](u_index) *
                                                     wgl_lambda->operator[](lambda_index) * wgl_rho->operator[](rho_index) *
                                                     integrand(cell_test, cell_trial, dof_test_index,
-                                                              dof_trial_index, uv_test, uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, kernel_value, R);
+                                                              dof_trial_index, uv_test, uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, kernel_value, R, r_test, r_trial);
                                         }
                                     }
                                 }
@@ -729,7 +729,7 @@ DROMON_NAMESPACE_OPEN
 //                                                              dof_test_index,
 //                                                              dof_trial_index, uv_test,
 //                                                              uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, kernel_value);
-                                            temp_matrix(dof_test_index, dof_trial_index) += full_jacobian*integrand(cell_test, cell_trial,dof_test_index,dof_trial_index, uv_test,uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, kernel_value, R);
+                                            temp_matrix(dof_test_index, dof_trial_index) += full_jacobian*integrand(cell_test, cell_trial,dof_test_index,dof_trial_index, uv_test,uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, kernel_value, R, r_test, r_trial);
                                         }
                                     }
                                 }
@@ -1070,7 +1070,7 @@ DROMON_NAMESPACE_OPEN
                                                 integrand(cell_test, cell_trial,
                                                           dof_test_index,
                                                           dof_trial_index, uv_test,
-                                                          uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, kernel_value, R);
+                                                          uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, kernel_value, R, r_test, r_trial);
                                     }
                                 }
                             }
@@ -1140,7 +1140,7 @@ DROMON_NAMESPACE_OPEN
                                             integrand(cell_test, cell_trial,
                                                       dof_test_index,
                                                       dof_trial_index, uv_test,
-                                                      uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, R);
+                                                      uv_trial, unitary_test_u, unitary_test_v, unitary_trial_u, unitary_trial_v, R, r_test, r_trial);
                                     }
                                 }
                             }

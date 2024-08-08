@@ -207,7 +207,7 @@ AdjointScatteredFieldExcitation<DoFParent<2, 3, Real>, CoefficientType, Real, Ma
           frequency, exterior_material) {
 
 
-    this->R_dist_field = R_dist_field_scalar*this->wavelength;
+    this->R_dist_field = R_dist_field_scalar;//*this->wavelength;
 
   this->r_field = {this->R_dist_field*sin(theta_sc)*cos(phi_sc), this->R_dist_field*sin(theta_sc)*sin(phi_sc), this->R_dist_field*cos(theta_sc)};
   this->isolation_direction = isolatation_direction;
@@ -221,7 +221,7 @@ AdjointScatteredFieldExcitation<DoFParent<2, 3, Real>, CoefficientType, Real, Ma
     : AdjointExcitation<DoFParent<2, 3, Real>, CoefficientType, Real>(
           frequency) {
 
-    this->R_dist_field = R_dist_field_scalar*this->wavelength;
+    this->R_dist_field = R_dist_field_scalar;//*this->wavelength;
 
   this->r_field = {this->R_dist_field*sin(theta_sc)*cos(phi_sc), this->R_dist_field*sin(theta_sc)*sin(phi_sc), this->R_dist_field*cos(theta_sc)};
   this->isolation_direction = isolatation_direction;
