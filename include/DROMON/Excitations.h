@@ -22,7 +22,8 @@ struct Excitation
   // virtual void set_incident_direction(const Real& theta_inc, const Real& phi_inc);
   virtual Point<spacedim, std::complex<Real>> evaluate_excitation(const Point<spacedim, Real>& R) const;
   virtual std::complex<Real> evaluate_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const;
-  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, double perturbValue) const;
+  virtual std::complex<Real> evaluate_excitation_in_direction_mat(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, double epsr) const;
+  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, int perturbVar, double perturbValue) const;
   virtual std::complex<Real> evaluate_hops_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const;
   virtual Real magnitude() const;
 };
@@ -58,7 +59,8 @@ struct PlaneWave : public Excitation<spacedim, Real>
 
   virtual Point<spacedim, std::complex<Real>> evaluate_excitation(const Point<spacedim, Real>& R) const override;
   virtual std::complex<Real> evaluate_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const override;
-  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, double perturbValue) const override;
+  virtual std::complex<Real> evaluate_excitation_in_direction_mat(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, double epsr) const override;
+  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, int perturbVar, double perturbValue) const override;
   virtual std::complex<Real> evaluate_hops_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const;
   virtual Real magnitude() const;
 };
@@ -68,7 +70,8 @@ struct PlaneWave<3, Real> : public Excitation<3, Real> {
   explicit PlaneWave(const Real& frequency, const Point<2, std::complex<Real>>& E_mag, const Real& theta_inc, const Real& phi_inc, const MaterialData<Real> &materialData);
   virtual Point<3, std::complex<Real>> evaluate_excitation(const Point<3, Real>& R) const override;
   virtual std::complex<Real> evaluate_excitation_in_direction(const Point<3, Real>& R, const Point<3, Real>& direction) const override;
-  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<3, Real>& R, const Point<3, Real>& direction, double perturbValue) const override;
+  virtual std::complex<Real> evaluate_excitation_in_direction_mat(const Point<3, Real>& R, const Point<3, Real>& direction, double epsr) const override;
+  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<3, Real>& R, const Point<3, Real>& direction, int perturbVar, double perturbValue) const override;
   virtual std::complex<Real> evaluate_hops_excitation_in_direction(const Point<3, Real>& R, const Point<3, Real>& direction) const;
   virtual Real magnitude() const override;
   void set_incident_direction(const Real& theta_inc, const Real& phi_inc);
@@ -128,11 +131,38 @@ std::complex<Real> PlaneWave<3, Real>::evaluate_excitation_in_direction(
 }
 
 template <class Real>
-std::complex<Real> PlaneWave<3, Real>::evaluate_excitation_in_direction_perturb(
-    const Point<3, Real> &R, const Point<3, Real> &direction, double perturbValue) const
+std::complex<Real> PlaneWave<3, Real>::evaluate_excitation_in_direction_mat(
+    const Point<3, Real> &R, const Point<3, Real> &direction, double epsr) const
 {
   const Real R_dot_n_hat = R.dot(n_hat);
-  const std::complex<Real> g = exp(-this->gamma*R_dot_n_hat * sqrt(perturbValue));
+    // std::cout << "gamma: " << this->gamma << std::endl;
+
+  const std::complex<Real> g = exp(-this->gamma*R_dot_n_hat*sqrt(epsr));
+  return g*(E_mag_cart(0)*direction(0) + E_mag_cart(1)*direction(1) + E_mag_cart(2)*direction(2));
+}
+
+template <class Real>
+std::complex<Real> PlaneWave<3, Real>::evaluate_excitation_in_direction_perturb(
+    const Point<3, Real> &R, const Point<3, Real> &direction, int perturbVar, double perturbValue) const
+{
+
+  const Real R_dot_n_hat = R.dot(n_hat);
+  std::complex<double> g;
+  
+  //g==exp(-j*omega*sqrt(eps*mu)*R_dot_n) which is why material is sqrt(perturbValue)
+  //perturb material
+  if (perturbVar == 1){
+    g = exp(-this->gamma*R_dot_n_hat * sqrt(perturbValue));
+  }
+  //perturb freq
+  else if (perturbVar == 2){
+    g = exp(-this->gamma*R_dot_n_hat * perturbValue);
+  }
+  //perturb radius
+  else if (perturbVar == 3){
+    g = exp(-this->gamma*R_dot_n_hat * perturbValue);
+  }
+
   return g*(E_mag_cart(0)*direction(0) + E_mag_cart(1)*direction(1) + E_mag_cart(2)*direction(2));
 }
 

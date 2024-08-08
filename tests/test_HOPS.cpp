@@ -41,13 +41,16 @@ int main() {
 
 
   //1 for running a MC, 2 for testing/FD comparison
-  int runMode = 2;
+  int runMode = 1;
 
   //1 for material params, 2 for frequency, 3 for radius
-  int perturbVar = 3;
+  int perturbVar = 1;
 
-  unsigned int n_cells_per_dim = 5;
-  freq = 400.0e6;
+  //perturbation size
+  double perturbSize = 1.01;
+
+  unsigned int n_cells_per_dim = 7;
+  freq = 500.0e6;
 
 
 
@@ -104,11 +107,12 @@ int main() {
           // Make the MaterialData
           // In this case, a PEC object embedded in air
           //PEC
+
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(normalDist[i], 1.0, false, false)));
           sidelength = 1.0;
-          saveName = "MC_mu1_sig0p1_Gcheck.txt";
+          saveName = "MC_mu1_sig0p1_Gcheck1.txt";
           
 
           break;
@@ -122,7 +126,7 @@ int main() {
           dromon::Material<double>(1.0, 1.0, false, false)));
           sidelength = 1.0;
           freq = normalDist[i];
-          saveName = "MC_mu400_sig25_Gcheck1.txt";
+          saveName = "MC_mu400_sig25_Gcheck.txt";
 
           break;
         }
@@ -148,11 +152,11 @@ int main() {
       Mesh<2, 3, CUBICP> mesh;
       Point<3, double> center = {0.0, 0.0, 0.0};
 
-      // MeshGenerator::square_plate(mesh, center, sidelength,
-      //                                 n_cells_per_dim);
+      MeshGenerator::square_plate(mesh, center, sidelength,
+                                      n_cells_per_dim);
 
-      MeshGenerator::hyper_sphere(mesh, center, sidelength,
-                                          n_cells_per_dim);
+      // MeshGenerator::hyper_sphere(mesh, center, sidelength,
+      //                                     n_cells_per_dim);
 
       Problems::AdaptiveSolver solver(&mesh, &mat_dom, 1, 10 ,5,5,5,5);
       solver.set_plane_wave_excitation(freq, {1.0,0.0});
@@ -160,13 +164,13 @@ int main() {
 
       double theta_sc = constants<double>::PI / 2.0;
       double phi_sc = 0.0;
-      double R_dist_scalar = 100.0;
+      double R_dist_scalar = 1000.0;
       // R_dist_scalar *= wave;
       solver.set_scattering_parameters(theta_sc,phi_sc,R_dist_scalar,{0.0,0.0,1.0});
 
       auto t1 = std::chrono::high_resolution_clock::now();
 
-      out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, sidelength, 1, perturbVar);
+      out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, sidelength, 1, perturbVar, perturbSize);
 
       auto t2 = std::chrono::high_resolution_clock::now();
       auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1);
@@ -185,11 +189,13 @@ int main() {
   }
   case 2:
   {
+    
+    double sidelength;
+    double mat;
     for (int i = 0; i < 2; ++i) 
     {
-
       MaterialData<double> mat_dom;
-      double sidelength;
+      std::cout << "New Run _________________________________________________________\n";
 
       switch (perturbVar)
       {
@@ -199,9 +205,12 @@ int main() {
           // Make the MaterialData
           // In this case, a PEC object embedded in air
           //PEC
+          // mat_dom.clear();
+          mat = 1.0 + i*mat*(perturbSize - 1.0);
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
-          dromon::Material<double>(1.0 + i*0.005, 1.0, false, false)));
+          dromon::Material<double>(mat, 1.0, false, false)));
+          std::cout << "perturbing Material, eps = " << mat << std::endl;
           sidelength = 1.0;// / wave;
           break;
         }
@@ -216,7 +225,9 @@ int main() {
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
           sidelength = 1.0;// / wave;
-          freq = freq + i*1.;
+          freq = freq + i*freq*(perturbSize-1.0);
+          std::cout << "perturbing freq, f = " << freq << std::endl;
+
           break;
 
         }
@@ -230,15 +241,14 @@ int main() {
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
-          sidelength = 2. + i*0.01;
+          sidelength = 1. + i*(perturbSize-1.0)*sidelength;
+          std::cout << "perturbing radius, r = " << sidelength << std::endl;
           break;
 
         }
 
 
       }
-
-      std::cout << "New Run _________________________________________________________\n";
 
       wave = 2.99792458e8 / freq;
 
@@ -267,9 +277,9 @@ int main() {
       auto t1 = std::chrono::high_resolution_clock::now();
 
       if (i == 0)
-        out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, sidelength, 1, perturbVar);
+        out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, sidelength, 1, perturbVar, perturbSize);
       if (i == 1)
-        out2 = solver.execute_refinement(1, 0.01, forward_matrix1, forward_excitation1, forward_solution1, adjoint_solution1, gradient1, sidelength, 1, perturbVar);
+        out2 = solver.execute_refinement(1, 0.01, forward_matrix1, forward_excitation1, forward_solution1, adjoint_solution1, gradient1, sidelength, 1, perturbVar, perturbSize);
 
       auto t2 = std::chrono::high_resolution_clock::now();
       auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1);
@@ -281,13 +291,37 @@ int main() {
 
     int m = forward_excitation0.size();
     std::vector<std::complex<double>> forward_excitation_grad (m);
-    for (int i = 0; i < m; ++i){
-      forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/(0.01*2.0);//*8.8541878128e-12);
-    }
-
     std::vector<std::complex<double>> forward_matrix_grad (m*m);
-    for (int i = 0; i < m*m; ++i){
-      forward_matrix_grad[i] = (forward_matrix1[i] - forward_matrix0[i])/(0.01*2.0);//*8.8541878128e-12);
+
+    if (perturbVar == 1){
+
+      for (int i = 0; i < m*m; ++i){
+        forward_matrix_grad[i] = (forward_matrix1[i] - forward_matrix0[i])/((perturbSize - 1.0)*mat*8.8541878128e-12);//*8.8541878128e-12);
+      }
+      for (int i = 0; i < m; ++i){
+        forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*mat*8.8541878128e-12);///(0.01*2.0);//*8.8541878128e-12);
+      }
+      
+    }
+    else if (perturbVar == 2){
+
+      for (int i = 0; i < m*m; ++i){
+        forward_matrix_grad[i] = (forward_matrix1[i] - forward_matrix0[i])/((perturbSize - 1.0)*freq);///(0.01*2.0);//*8.8541878128e-12);
+      }
+      for (int i = 0; i < m; ++i){
+        forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*freq);///(0.01*2.0);//*8.8541878128e-12);
+      }
+
+    }
+    else if (perturbVar == 3){
+
+      for (int i = 0; i < m*m; ++i){
+        forward_matrix_grad[i] = (forward_matrix1[i] - forward_matrix0[i])/((perturbSize - 1.0)*sidelength);///(0.01*2.0);//*8.8541878128e-12);
+      }
+      for (int i = 0; i < m; ++i){
+        forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*sidelength);///(0.01*2.0);//*8.8541878128e-12);
+      }
+
     }
 
     std::vector<std::complex<double>> forward_system_grad (m);
@@ -303,14 +337,33 @@ int main() {
       {
       //std::cout << "excitation: " << this->forward_excitation_HO_HOPS[i] << "   system: " << (this->forward_system_HO_HOPS[i]) << std::endl;
       finiteGrad += (forward_excitation_grad[i] - forward_system_grad[i])*std::conj(adjoint_solution0[i]);
-      // finiteGrad += (forward_excitation_grad[i]) * std::conj(adjoint_solution0[i]);
-      // finiteGrad += (-forward_system_grad[i]) * std::conj(adjoint_solution0[i]);
-      // gradient += (this->forward_excitation_HO_HOPS[i] - this->forward_system_HO_HOPS[i])*std::conj(this->current_adjoint_solution[i]);
+      // std::cout << "deltaG: " << forward_excitation_grad[i] << "   deltaL*u: " << forward_system_grad[i] << std::endl;
+
     }
 
-    std::cout << "Gradient from FD of G and L!!!:  " << finiteGrad << std::endl;
-    std::cout << "Grad from FD of output: " << (out2 - out1)/(0.01*2.0)<< std::endl;
-    std::cout << "abs compare: " << abs((out2 - out1)/(0.01*2.0)) << ", " << abs(finiteGrad) << std::endl;
+    
+
+    if (perturbVar == 1){
+      std::cout << "division: " << ((perturbSize - 1.0)*mat) << "  out2: " << out2 << "  out1: " << out1 << std::endl;
+      std::cout << "Gradient from FD of G and L!!!:  " << finiteGrad << std::endl;
+      std::cout << "Grad from FD of output: " << (out2 - out1)/((perturbSize - 1.0)*mat*8.8541878128e-12)<< std::endl;
+      std::cout << "abs compare: " << abs((out2 - out1)/((perturbSize - 1.0)*mat*8.8541878128e-12)) << ", " << abs(finiteGrad) << std::endl;
+
+    }
+    else if (perturbVar == 2){
+      std::cout << "Gradient from FD of G and L!!!:  " << finiteGrad << std::endl;
+      std::cout << "Grad from FD of output: " << (out2 - out1)/((perturbSize - 1.0)*freq)<< std::endl;
+      std::cout << "abs compare: " << abs((out2 - out1)/((perturbSize - 1.0)*freq)) << ", " << abs(finiteGrad) << std::endl;
+
+    }
+    else if (perturbVar == 3){
+      std::cout << "Gradient from FD of G and L!!!:  " << finiteGrad << std::endl;
+      std::cout << "Grad from FD of output: " << (out2 - out1)/((perturbSize - 1.0)*sidelength)<< std::endl;
+      std::cout << "abs compare: " << abs((out2 - out1)/((perturbSize - 1.0)*sidelength)) << ", " << abs(finiteGrad) << std::endl;
+
+    }
+
+
     break;
   }
 }

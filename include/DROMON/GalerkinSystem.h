@@ -39,7 +39,7 @@ public:
   template <class Integrator>
   void fill_system_perturb(Integrator &integrator,
                    const MaterialData<Real> &materialData,
-                   const Excitations::Excitation<spacedim, Real> &excitation,
+                   const Excitations::Excitation<spacedim, Real> &excitation, int perturbVar, double perturbSize,
                    const unsigned int &ngl_order = 0, const unsigned int& ngl_vertex_order = 0, const unsigned int& ngl_edge_order = 0, const unsigned int& ngl_self_order = 0);
 
 
@@ -48,7 +48,7 @@ public:
   void fill_forward_excitation(
       Integrator &integrator,
       const Excitations::Excitation<spacedim, Real> &excitation,
-      const unsigned int &ngl_order = 5);
+      const MaterialData<Real> &materialData, const unsigned int &ngl_order = 5);
 
   template <class Integrator>
   void fill_forward_excitation_HOPS(
@@ -60,7 +60,7 @@ public:
   void fill_forward_excitation_perturb(
       Integrator &integrator,
       const Excitations::Excitation<spacedim, Real> &excitation,
-      const MaterialData<Real> &materialData, const unsigned int &ngl_order = 5);
+      const MaterialData<Real> &materialData, int perturbVar, double perturbSize, const unsigned int &ngl_order = 5);
 
   template <class AdjointExcitation>
   void fill_adjoint_excitation(AdjointExcitation &adjointExcitation,
@@ -285,7 +285,7 @@ template <unsigned int dim, unsigned int spacedim, class CoefficientType,
 template <class Integrator>
 void GalerkinSystem<dim, spacedim, CoefficientType, Real>::fill_system_perturb(
     Integrator &integrator, const MaterialData<Real> &materialData,
-    const Excitations::Excitation<spacedim, Real> &excitation,
+    const Excitations::Excitation<spacedim, Real> &excitation,  int perturbVar, double perturbSize,
     const unsigned int &ngl_order, const unsigned int& ngl_vertex_order, const unsigned int& ngl_edge_order, const unsigned int& ngl_self_order) {
   const unsigned int uniform_ngl = ngl_order == 0 ? 5 : ngl_order;
   is_symmetric = integrator.is_symmetric();
@@ -302,7 +302,7 @@ void GalerkinSystem<dim, spacedim, CoefficientType, Real>::fill_system_perturb(
       //      ////////////////////////////
       integrator.integrate_perturb(
           cell_test, cell_trial, *cell_dofmask[cell_test.index],
-          *cell_dofmask[cell_trial.index], materialData, excitation,
+          *cell_dofmask[cell_trial.index], materialData, excitation, perturbVar, perturbSize,
           cell_subsystem[cell_test.index].get(), ngl_order, ngl_vertex_order, ngl_edge_order, ngl_self_order);
   }
 
@@ -315,7 +315,7 @@ void GalerkinSystem<dim, spacedim, CoefficientType, Real>::fill_system_perturb(
 
       integrator.integrate_perturb(
           cell_test, cell_trial, *cell_dofmask[cell_test.index],
-          *cell_dofmask[cell_trial.index], materialData, excitation,
+          *cell_dofmask[cell_trial.index], materialData, excitation, perturbVar, perturbSize,
           cell_subsystem[cell_test.index].get(), ngl_order, ngl_vertex_order, ngl_edge_order, ngl_self_order);
     }
   }
@@ -412,7 +412,7 @@ void GalerkinSystem<dim, spacedim, CoefficientType, Real>::
     fill_forward_excitation(
         Integrator &integrator,
         const Excitations::Excitation<spacedim, Real> &excitation,
-        const unsigned int &ngl_order) {
+        const MaterialData<Real> &materialData, const unsigned int &ngl_order) {
 #ifndef DEBUG
 #pragma omp parallel for
 #endif
@@ -450,14 +450,14 @@ void GalerkinSystem<dim, spacedim, CoefficientType, Real>::
     fill_forward_excitation_perturb(
         Integrator &integrator,
         const Excitations::Excitation<spacedim, Real> &excitation,
-        const MaterialData<Real> &materialData, const unsigned int &ngl_order) {
+        const MaterialData<Real> &materialData, int perturbVar, double perturbSize, const unsigned int &ngl_order) {
 #ifndef DEBUG
 #pragma omp parallel for
 #endif
   for (auto &cell_test : (this->dof_handler)->get_dof_parents()) {
     cell_subexcitation[cell_test.index]->zero_out();
     integrator.fill_excitation_perturb(cell_test, *cell_dofmask[cell_test.index],
-                               excitation, ngl_order, materialData,
+                               excitation, ngl_order, materialData, perturbVar, perturbSize,
                                cell_subexcitation[cell_test.index].get());
   }
 }

@@ -225,9 +225,6 @@ AdjointScatteredFieldExcitation<DoFParent<2, 3, Real>, CoefficientType, Real, Ma
 
   this->r_field = {this->R_dist_field*sin(theta_sc)*cos(phi_sc), this->R_dist_field*sin(theta_sc)*sin(phi_sc), this->R_dist_field*cos(theta_sc)};
   this->isolation_direction = isolatation_direction;
-  std::cout << "fields: " << R_dist_field << ", " << R_dist_field_scalar << std::endl;
-  std::cout << "r_field(x,y,z): " << r_field[0] << ", " << r_field[1] << ", " << r_field[2] << std::endl;
-  std::cout << "isolation direction: " << isolation_direction[0] << ", " << isolation_direction[1] << ", " << isolation_direction[2] << std::endl;
 
 }
 

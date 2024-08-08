@@ -248,7 +248,6 @@ Matrix<CoefficientType, MatrixSolvingPolicy>::multiply(std::vector<CoefficientTy
   // std::cout << "size of m: " << this->m << "  size of solution vector: " << solution.size() << std::endl;
   // std::cout << "LHS data: " << std::endl;
   auto LHS = LHS_data.get();
-  std::cout << "m: " << m << "  n: " << n << std::endl;
   for (unsigned int i = 0; i < this->m; ++i)
   {
     for (unsigned int j = 0; j < this->n; ++j)
@@ -272,7 +271,6 @@ Matrix<CoefficientType, MatrixSolvingPolicy>::get_matrix_copy() {
   std::vector<CoefficientType> out;
 
   auto LHS = LHS_data.get();
-  std::cout << "m: " << m << "  n: " << n << std::endl;
   for (unsigned int i = 0; i < this->m; ++i)
   {
     for (unsigned int j = 0; j < this->n; ++j)

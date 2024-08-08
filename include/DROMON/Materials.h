@@ -68,6 +68,7 @@ private:
 
 template <class CoefficientType>
 void MaterialData<CoefficientType>::push_back(const MaterialDomain<CoefficientType> &domain) {
+  // domains.clear();
   domains.push_back(domain);
 }
 template <class CoefficientType>

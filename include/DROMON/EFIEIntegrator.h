@@ -45,7 +45,7 @@ public:
       const DoFCellType &cell_test, const DoFCellType &cell_trial,
       const DoFMask &mask_test, const DoFMask &mask_trial,
       const MaterialData<Real> &material_data,
-      const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation,
+      const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation, int perturbVar, double perturbSize,
       DenseSubMatrix<CoefficientType> *output, const unsigned int &ngl_order = 0, const unsigned int& ngl_vertex_order = 0, const unsigned int& ngl_edge_order = 0, const unsigned int& ngl_self_order = 0);
   
   virtual void integrate(const DoFCellType &cell_test,
@@ -71,7 +71,7 @@ public:
     virtual void fill_excitation_perturb(
       const DoFCellType &cell_test, const DoFMask &mask_test,
       const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation,
-      const unsigned int& ngl, const MaterialData<Real> &material_data, DenseSubVector<CoefficientType> *output);
+      const unsigned int& ngl, const MaterialData<Real> &material_data, int perturbVar, double perturbSize, DenseSubVector<CoefficientType> *output);
 
 
   virtual bool is_symmetric() const override;
@@ -480,7 +480,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
     const DoFCellType &cell_test, const DoFCellType &cell_trial,
     const DoFMask &mask_test, const DoFMask &mask_trial,
     const MaterialData<Real> &material_data,
-    const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation,
+    const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation, int perturbVar, double perturbSize,
     DenseSubMatrix<CoefficientType> *output, const unsigned int &ngl_order, const unsigned int& ngl_vertex_order, const unsigned int& ngl_edge_order, const unsigned int& ngl_self_order) {
 
   // Setup the quadrature orders for the given problem...
@@ -497,21 +497,21 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
       (material_data.get_material_domain(cell_test_geom->material_domain_id()))
           .get_exterior();
 
-  auto kernel = [&excitation, &exterior_material](const Real &R) {
+  auto kernel = [&excitation, &exterior_material, perturbSize](const Real &R) {
 
 //----------------------------------------------------------------------------------------------------
     //shouldn't need to perturb here
     //original
-    return kernels::g(R, excitation.omega, exterior_material.epsr,
-                      exterior_material.mur);
+    // return kernels::g(R, excitation.omega, exterior_material.epsr,
+    //                   exterior_material.mur);
 
     //
-
       //// perturbed material 
-    // double epsr_perturb = exterior_material.epsr*1.01;
-    // double eps_perturb = exterior_material.eps*1.01;
-    // return kernels::g(R, excitation.omega, epsr_perturb,
-    //                   exterior_material.mur);
+    double epsr_perturb = exterior_material.epsr*perturbSize;
+    double eps_perturb = exterior_material.eps*perturbSize;
+    return kernels::g(R, excitation.omega, epsr_perturb,
+                      exterior_material.mur);
+
 //----------------------------------------------------------------------------------------------------
   };
   auto test_component = [](const DoFCellType &test_cell,
@@ -537,7 +537,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
   // Let's generate a lambda function for the integrand
   ;
 
-    auto combined_integrand_perturb = [&excitation, &exterior_material,&complexj](const Point<2, Real>& test_values,
+    auto combined_integrand_perturb = [&excitation, &exterior_material,&complexj, perturbVar, perturbSize](const Point<2, Real>& test_values,
                                                               const Point<2, Real>& trial_values,
                                const Point<DoFCellType::space_dim, Real> &unitary_test,
                                const Point<DoFCellType::space_dim, Real> &unitary_trial,
@@ -550,21 +550,59 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
         // double eps_perturb = exterior_material.eps*1.01;
         // std::complex<double> g = kernels::g(R*1.01, excitation.omega, epsr_perturb, exterior_material.mur);
 
+        std::complex<double> g;
+        Real interm_comp_0;
+        Real interm_comp_1;
+        std::complex<Real> temp_out;
 
+        // perturbed material
+        if (perturbVar == 1){
+          double epsPerturb = exterior_material.eps * perturbSize;
+          double epsrPerturb = exterior_material.epsr * perturbSize;
+
+          // std::cout << "eps: " << exterior_material.eps << "  epsPerturb: " << epsPerturb << std::endl;
+
+          g = kernels::g(R, excitation.omega, epsrPerturb, exterior_material.mur);
+          interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*excitation.omega;
+          interm_comp_1 = test_values(1)*trial_values(1)/excitation.omega;
+          temp_out = kernel_value*(interm_comp_0*exterior_material.mu + interm_comp_1/epsPerturb);
+
+        }
+        // perturbed frequency
+        else if (perturbVar == 2){
+          double omegaPerturb = excitation.omega * perturbSize;
+
+          // g = kernels::g(R, omegaPerturb, exterior_material.epsr, exterior_material.mur);
+          interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*omegaPerturb;
+          interm_comp_1 = test_values(1)*trial_values(1)/omegaPerturb;
+          // temp_out = g*(interm_comp_0*exterior_material.mu + interm_comp_1/exterior_material.eps);
+          temp_out = g*(interm_comp_0*exterior_material.mu + interm_comp_1/exterior_material.eps);
+
+
+        }
         // perturbed radius
-        std::complex<double> g = kernels::g(R*1.01, excitation.omega, exterior_material.epsr, exterior_material.mur);
+        else if (perturbVar == 3){
+
+          double Rperturb = R * perturbSize;
+
+          g = kernels::g(Rperturb, excitation.omega, exterior_material.epsr, exterior_material.mur);
+          interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*excitation.omega;
+          interm_comp_1 = test_values(1)*trial_values(1)/excitation.omega;
+          temp_out = g*(interm_comp_0*exterior_material.mu + interm_comp_1/exterior_material.eps);
+
+        }
 
 
 
-        const Real interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*excitation.omega;
-        const Real interm_comp_1 = test_values(1)*trial_values(1)/excitation.omega;
+        // const Real interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*excitation.omega;
+        // const Real interm_comp_1 = test_values(1)*trial_values(1)/excitation.omega;
 
         //original
         // const auto temp_out = kernel_value*(interm_comp_0*exterior_material.mu + interm_comp_1/exterior_material.eps);
         //perturbed material
         // const auto temp_out = kernel_value*(interm_comp_0*exterior_material.mu + interm_comp_1/eps_perturb);
         //perturbed radius
-        const auto temp_out = g*(interm_comp_0*exterior_material.mu + interm_comp_1/exterior_material.eps);
+        // const auto temp_out = g*(interm_comp_0*exterior_material.mu + interm_comp_1/exterior_material.eps);
 
 //--------------------------------------------------------------------------------------------------------------------
 
@@ -873,6 +911,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation(
   qcollection.get_weights_and_points(ngl, wgl, xgl);
   const std::complex<Real> complexj = {0., 1.};
 
+
   const unsigned dim = cell_test.cell_dim;
   switch (dim) {
   case 2: {
@@ -886,6 +925,11 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation(
         auto unitary_test_v = cell_test_geom->unitary_vector(uv_test, v_dir);
 
         const auto r_test = cell_test_geom->r(uv_test);
+
+        // const auto excitation_dot_au =
+        //     excitation.evaluate_excitation_in_direction(r_test, unitary_test_u);
+        // const auto excitation_dot_av =
+        //     excitation.evaluate_excitation_in_direction(r_test, unitary_test_v);
 
         const auto excitation_dot_au =
             excitation.evaluate_excitation_in_direction(r_test, unitary_test_u);
@@ -999,7 +1043,7 @@ template <class DoFCellType, class CoefficientType, class Real>
 void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation_perturb(
     const DoFCellType &cell_test, const DoFMask &mask_test,
     const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation,const unsigned int& ngl,
-    const MaterialData<Real> &material_data, DenseSubVector<CoefficientType> *output) {
+    const MaterialData<Real> &material_data, int perturbVar, double perturbSize, DenseSubVector<CoefficientType> *output) {
   std::vector<double> *xgl, *wgl;
   qcollection.push_back(ngl);
   qcollection.get_weights_and_points(ngl, wgl, xgl);
@@ -1019,18 +1063,14 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation_perturb
 
         auto r_test = cell_test_geom->r(uv_test);
 ////------------------------------------------------------------------------------------------
-        //perturbed radius
-        r_test *= 1.01;
-        const auto excitation_dot_au =
-            excitation.evaluate_excitation_in_direction_perturb(r_test, unitary_test_u, 1.0);
-        const auto excitation_dot_av =
-            excitation.evaluate_excitation_in_direction_perturb(r_test, unitary_test_v, 1.0);
 
-        //perturbed material
-        // const auto excitation_dot_au =
-        //     excitation.evaluate_excitation_in_direction_perturb(r_test, unitary_test_u, 1.01);
-        // const auto excitation_dot_av =
-        //     excitation.evaluate_excitation_in_direction_perturb(r_test, unitary_test_v, 1.01);
+        std::complex<double> excitation_dot_au;
+        std::complex<double> excitation_dot_av;
+
+          excitation_dot_au =
+            excitation.evaluate_excitation_in_direction_perturb(r_test, unitary_test_u, perturbVar, perturbSize);
+          excitation_dot_av =
+            excitation.evaluate_excitation_in_direction_perturb(r_test, unitary_test_v, perturbVar, perturbSize);
 
 //----------------------------------------------------------------------------------------------
 
