@@ -807,6 +807,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_regular(
           const Real jac2 = jac1 * wgl->operator[](i_trial);
           for (unsigned int j_trial = 0; j_trial < wgl->size(); ++j_trial) {
             const Real jacobian = jac2 * wgl->operator[](j_trial);
+
             const Point<dim, Real> uv_trial(xgl->operator[](i_trial),
                                             xgl->operator[](j_trial));
             const auto unitary_trial_u =

@@ -41,7 +41,7 @@ int main() {
 
 
   //1 for running a MC, 2 for testing/FD comparison
-  int runMode = 1;
+  int runMode = 2;
 
   //1 for material params, 2 for frequency, 3 for radius
   int perturbVar = 3;
@@ -195,7 +195,7 @@ int main() {
     
     double sidelength;
     double mat;
-    for (int i = 0; i < 2; ++i) 
+    for (int i = 0; i < 1; ++i) 
     {
       MaterialData<double> mat_dom;
       std::cout << "New Run _________________________________________________________\n";
@@ -244,7 +244,7 @@ int main() {
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
-          sidelength = 1. + i*(perturbSize-1.0)*sidelength;
+          sidelength = 1.1 + i*(perturbSize-1.0)*sidelength;
           std::cout << "perturbing radius, r = " << sidelength << std::endl;
           break;
 
