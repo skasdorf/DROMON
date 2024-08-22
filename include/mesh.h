@@ -399,6 +399,7 @@ Real Cell<dim, spacedim, celltype, Real>::diameter() const {
   }
 }
 
+
 template <unsigned int dim, unsigned int spacedim>
 /**
  *

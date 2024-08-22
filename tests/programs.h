@@ -189,7 +189,7 @@ void RegularSolver<dim, spacedim, patch_order>::set_plane_wave_excitation(
 template <unsigned int dim, unsigned int spacedim, unsigned int patch_order>
 class AdaptiveSolver {
 public:
-  AdaptiveSolver(Mesh<dim, spacedim, patch_order> *mesh,
+  AdaptiveSolver(Mesh<dim, spacedim, patch_order> *mesh, Mesh<dim, spacedim, patch_order> *mesh1,
                  MaterialData<double> *mat_dom,
                  const unsigned int &min_expansion_order = 1,
                  const unsigned int &max_expansion_order = 1,
@@ -202,6 +202,7 @@ public:
         ngl_vertex(ngl_vertex), ngl_edge(ngl_edge), ngl_self(ngl_self) {
     this->mesh = mesh;
     this->mat_dom = mat_dom;
+    this->mesh1 = mesh1;
 
     this->initialize_fe_collections();
     this->initialize_dof_handler();
@@ -279,9 +280,9 @@ private:
 
   void initialize_dof_handler_HOPS() {
     this->dof_handler_HOPS = std::make_unique<DoFHandler<dim, spacedim>>(
-        DoFHandler<dim, spacedim>(*mesh));
+        DoFHandler<dim, spacedim>(*this->mesh1));
     this->dof_handler_projection_HOPS = std::make_unique<DoFHandler<dim, spacedim>>(
-        DoFHandler<dim, spacedim>(*mesh));
+        DoFHandler<dim, spacedim>(*this->mesh1));
   }
   bool check_error_estimation_correctness = true;
 
@@ -294,6 +295,7 @@ private:
   const unsigned int ngl_edge;
 
   Mesh<dim, spacedim, patch_order> *mesh;
+  Mesh<dim, spacedim, patch_order> *mesh1;
   MaterialData<double> *mat_dom;
 
   FECollectionCollector<dim, spacedim, double> fe_collection_collector;
@@ -450,9 +452,14 @@ void AdaptiveSolver<dim, spacedim, patch_order>::fill_HOPS_system() {
     case 1:
     {
 
-      cg_sys_HOPS->fill_system_perturb(integrator_HOPS, *mat_dom, *excitation_HOPS , this->perturbVar, this->perturbSize, ngl_regular, ngl_vertex, ngl_edge, ngl_self);
-      cg_sys_HOPS->fill_forward_excitation_perturb(integrator_HOPS, *excitation_HOPS, *mat_dom, this->perturbVar, this->perturbSize, ngl_regular);
+        cg_sys_HOPS->fill_system(integrator_HOPS, *mat_dom, *excitation_HOPS, ngl_regular,
+                          ngl_vertex, ngl_edge, ngl_self);
+        cg_sys_HOPS->fill_forward_excitation(integrator_HOPS, *excitation_HOPS, *mat_dom, ngl_regular);
 
+        // cg_sys_HOPS->fill_system_perturb(integrator_HOPS, *mat_dom, *excitation_HOPS , this->perturbVar, this->perturbSize, ngl_regular, ngl_vertex, ngl_edge, ngl_self);
+        // cg_sys_HOPS->fill_forward_excitation_perturb(integrator_HOPS, *excitation_HOPS, *mat_dom, this->perturbVar, this->perturbSize, ngl_regular);
+
+      
       // cg_sys_HOPS->fill_forward_excitation(integrator_HOPS, *excitation_HOPS, ngl_regular);
       // cg_sys_HOPS->fill_system(integrator_HOPS, *mat_dom, *excitation_HOPS, ngl_regular, ngl_vertex, ngl_edge, ngl_self);
 
@@ -536,19 +543,9 @@ void AdaptiveSolver<dim, spacedim,
       for (int i = 0; i < m; ++i){
         for (int j = 0; j < m; ++j){
           product[i] += delta_mat[i*m+j]*this->forward_solution_ho[j];
-          normL += delta_mat[i*m+j];
         }
       }
 
-      for (int i = 0; i < m; ++i){
-        normLu += product[i];
-        normU += this->forward_solution_ho[i];
-      }
-
-      normL /= (m*m);
-      normLu /= (m);
-      normU /= m;
-      std::complex<double> normG;
       for (int i = 0; i < m; ++i){
 
         // perturb material
@@ -556,26 +553,21 @@ void AdaptiveSolver<dim, spacedim,
           double eps = mat_dom->get_material_domain(0).get_exterior().eps;
           // delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (8.8541878128e-12 * (this->perturbSize - 1.0));
           delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (eps * (this->perturbSize - 1.0));
-          normG += (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (8.8541878128e-12 * (this->perturbSize - 1.0));
         }
         //pertrub freq
         else if (this->perturbVar == 2){
           delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (this->freq * 2 * 3.1415926535 * (this->perturbSize - 1.0));
-          normG += (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (this->freq * 2 * 3.1415926535 * (this->perturbSize - 1.0));
         }
         // perturb radius
         else if (this->perturbVar == 3){
           delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / ((this->perturbSize - 1.0)*this->sidelength);
-          normG += (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / ((this->perturbSize - 1.0)*this->sidelength);
         }
       }
-      normG /= m;
       //store
       // auto forward_system_HO_HOPS = product;
       this->forward_system_HO_HOPS = product;
       this->forward_excitation_HO_HOPS = delta_vec;
 
-      std::cout << "normLu: " << normLu << "   normU: " << normU << "   normL: " << normL << std::endl;
 
       break;
     }
@@ -590,6 +582,7 @@ void AdaptiveSolver<dim, spacedim,
     }
     
   }
+
   // for (int i = 0; i < this->forward_system_HO_HOPS.size(); ++i){
   // std::cout << "deltaL*u: " << forward_system_HO_HOPS[i] << "    deltaG[i]: " << forward_excitation_HO_HOPS[i] << std::endl;
   // }
@@ -620,9 +613,9 @@ void AdaptiveSolver<dim, spacedim,
         dof_handler_projection.get());
     this->dof_handler_projection->distribute_dofs();
     dromon::MatrixSolving::Matrix<std::complex<double>,
-                                    dromon::MatrixSolvingPolicies::MKLPolicy>
+        dromon::MatrixSolvingPolicies::MKLPolicy>
         matrix_lo(dof_handler_projection->get_n_active_dofs(),
-                  dof_handler_projection->get_n_active_dofs());
+        dof_handler_projection->get_n_active_dofs());
 
     matrix_lo.matrix_from_galerkin_system(cg_sys.get(),
                                           dof_handler_projection.get());
@@ -647,12 +640,12 @@ void AdaptiveSolver<dim, spacedim,
     this->qoi_out = isolation_direction.dot(Esc_value);
     this->adjoint_excitation_Esc.reset();
     this->adjoint_excitation_Esc =
-        std::make_unique<Excitations::AdjointScatteredFieldExcitation<
-            dromon::DoFParent<dim, spacedim, double>,
-            std::complex<double>, double, double>>(Excitations::AdjointScatteredFieldExcitation<
-                         dromon::DoFParent<dim, spacedim, double>,
-                         std::complex<double>, double, double>(
-            freq, theta_sc, phi_sc, isolation_direction, R_dist_scalar));
+          std::make_unique<Excitations::AdjointScatteredFieldExcitation<
+          dromon::DoFParent<dim, spacedim, double>,
+          std::complex<double>, double, double>>(Excitations::AdjointScatteredFieldExcitation<
+          dromon::DoFParent<dim, spacedim, double>,
+          std::complex<double>, double, double>(
+          freq, theta_sc, phi_sc, isolation_direction, R_dist_scalar));
     // Now fill the adjoint excitation
     cg_sys->fill_adjoint_excitation(*adjoint_excitation_Esc,
                                     this->ngl_regular);
@@ -666,8 +659,8 @@ void AdaptiveSolver<dim, spacedim,
         dromon::DoFParent<dim, spacedim, double>, std::complex<double>,
         double, double>>(
         Excitations::AdjointRCSExcitation<
-            dromon::DoFParent<dim, spacedim, double>, std::complex<double>,
-            double, double>(freq, theta_sc, phi_sc, Esc_value, R_dist_scalar));
+        dromon::DoFParent<dim, spacedim, double>, std::complex<double>,
+        double, double>(freq, theta_sc, phi_sc, Esc_value, R_dist_scalar));
     // Now fill the adjoint excitation
     cg_sys->fill_adjoint_excitation(*adjoint_excitation_RCS,
                                     this->ngl_regular);
@@ -676,9 +669,9 @@ void AdaptiveSolver<dim, spacedim,
   // Solve the higher order (adjoint) problem
   {
     dromon::MatrixSolving::Matrix<std::complex<double>,
-                                    dromon::MatrixSolvingPolicies::MKLPolicy>
+        dromon::MatrixSolvingPolicies::MKLPolicy>
         matrix_hi(dof_handler->get_n_active_dofs(),
-                  dof_handler->get_n_active_dofs());
+        dof_handler->get_n_active_dofs());
 
     matrix_hi.matrix_from_galerkin_system(cg_sys.get(), dof_handler.get());
     matrix_hi.adjoint_RHS_from_galerkin_system(cg_sys.get(), dof_handler.get());
@@ -697,17 +690,17 @@ void AdaptiveSolver<dim, spacedim,
   {
     //this is the higher order forward problem
     dromon::MatrixSolving::Matrix<std::complex<double>,
-                                    dromon::MatrixSolvingPolicies::MKLPolicy>
+        dromon::MatrixSolvingPolicies::MKLPolicy>
         matrix_hi(dof_handler->get_n_active_dofs(),
-                  dof_handler->get_n_active_dofs());
+        dof_handler->get_n_active_dofs());
 
     //this entry is temporary.  Once the forward problem is solved, the LHS and RHS are changed
     //this is a copy of the forward system that will not be solve so that the forward matrix is unaltered
     //this will be used for checking the L J_S gradient
     dromon::MatrixSolving::Matrix<std::complex<double>,
-                                    dromon::MatrixSolvingPolicies::MKLPolicy>
+        dromon::MatrixSolvingPolicies::MKLPolicy>
         matrix_hi_unsolved(dof_handler->get_n_active_dofs(),
-                  dof_handler->get_n_active_dofs());
+        dof_handler->get_n_active_dofs());
 
     matrix_hi.matrix_from_galerkin_system(cg_sys.get(), dof_handler.get());
     matrix_hi.RHS_from_galerkin_system(cg_sys.get(), dof_handler.get());
@@ -807,7 +800,8 @@ void AdaptiveSolver<dim, spacedim, patch_order>::set_scattering_parameters(
   this->isolation_direction = isolation_direction;
   if (isolation_direction == Point<spacedim, double>())
     use_RCS_QoI = true;
-  else use_Esc_QoI = true;
+  else 
+    use_Esc_QoI = true;
 
 }
 
@@ -816,8 +810,8 @@ double AdaptiveSolver<dim, spacedim, patch_order>::estimate_error()
 {
   dromon::KahanVector<std::complex<double>> error_contributions_temp(mesh->n_cells());
   dromon::ErrorEstimation::EstimateDWR(*dof_handler_projection, *dof_handler,
-                                         current_forward_solution, current_adjoint_solution, *cg_sys,
-                                         error_contributions_temp);
+      current_forward_solution, current_adjoint_solution, *cg_sys,
+      error_contributions_temp);
   this->current_total_error = error_contributions_temp.sum();
   this->error_contributions = error_contributions_temp.data();
   std::cout << "Total error: " << current_total_error << std::endl;
@@ -844,11 +838,11 @@ template <unsigned int dim, unsigned int spacedim, unsigned int patch_order>
 bool AdaptiveSolver<dim, spacedim, patch_order>::refine_mesh()
 {
   this->abstol =
-      this->reltol * std::abs(this->current_total_error + qoi_out) / (double(mesh->n_cells())) * 20.0;
+    this->reltol * std::abs(this->current_total_error + qoi_out) / (double(mesh->n_cells())) * 20.0;
   std::cout << "Abstol: " << abstol << std::endl;
   if (this->abs_max_error < abstol)
     return true;
- // Refinement::uniform_p_refinement(dof_handler.get());
+  // Refinement::uniform_p_refinement(dof_handler.get());
   dromon::Refinement::prediction_p_refinement(dof_handler.get(), error_contributions, abstol, -1);
   //dromon::Refinement::prediction_p_refinement(dof_handler_HOPS.get(), error_contributions, abstol, -1);
   return false;
@@ -877,6 +871,7 @@ std::vector<std::complex<double>> &adjoint_solution, std::complex<double> &gradi
   this->initialize_DoF_systems(adjoint_starting_index);
   bool is_refinement_complete = false;
   this->sidelength = sidelength;
+  this->mesh1 = mesh1;
 
   // for (unsigned int refinement_iter = 0; refinement_iter < max_refinement_iters; ++refinement_iter)
   for (unsigned int refinement_iter = 0; refinement_iter < 1; ++refinement_iter)

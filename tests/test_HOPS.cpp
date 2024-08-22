@@ -41,17 +41,17 @@ int main() {
 
 
   //1 for running a MC, 2 for testing/FD comparison
-  int runMode = 2;
+  int runMode = 1;
 
   //1 for material params, 2 for frequency, 3 for radius
   int perturbVar = 3;
 
   //perturbation size
   // double perturbSize = 1.0000001;
-  double perturbSize = 1.0001;
+  double perturbSize = 1.000001;
 
 
-  unsigned int n_cells_per_dim = 8;
+  unsigned int n_cells_per_dim = 9;
   freq = 500.0e6;
 
 
@@ -116,7 +116,6 @@ int main() {
           sidelength = 1.0;
           saveName = "./output/MC_mu80_sig3_plate_analyt.txt";
           
-
           break;
         }
 
@@ -145,7 +144,6 @@ int main() {
           saveName = "./output/MC_mu1_sig0p1_sphere.txt";
 
           break;
-
         }
 
 
@@ -160,14 +158,28 @@ int main() {
       MeshGenerator::hyper_sphere(mesh, center, sidelength,
                                           n_cells_per_dim);
 
+      Mesh<2,3, CUBICP> mesh1;
+      
+      if (perturbVar == 3)
+        sidelength *= perturbSize;
 
-      Problems::AdaptiveSolver solver(&mesh, &mat_dom, 1, 10 ,5,5,5,5);
+      MeshGenerator::hyper_sphere(mesh1, center, sidelength,
+                                          n_cells_per_dim);
+
+      Problems::AdaptiveSolver solver(&mesh, &mesh1, &mat_dom, 1, 10 ,5,5,5,5);
       solver.set_plane_wave_excitation(freq, {1.0,0.0});
+
+
+
+      if (perturbVar == 3)
+        sidelength /= perturbSize;
+
+
       std::cout << std::setprecision(12);
 
       double theta_sc = constants<double>::PI / 2.0;
       double phi_sc = 0.0;
-      double R_dist_scalar = 100.0;
+      double R_dist_scalar = 1000.0;
       // R_dist_scalar *= wave;
       solver.set_scattering_parameters(theta_sc,phi_sc,R_dist_scalar,{0.0,0.0,1.0});
 
@@ -176,9 +188,10 @@ int main() {
       out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, sidelength, 1, perturbVar, perturbSize);
 
       auto t2 = std::chrono::high_resolution_clock::now();
-      auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1);
-      std::cout << "total execution time: " << exec_time.count() << std::endl;
 
+      auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1);
+
+      std::cout << "total execution time: " << exec_time.count() << std::endl;
       std::cout << "variable-----------------: " << normalDist[i] << std::endl;
 
       //  out2.push_back(output);
@@ -195,7 +208,8 @@ int main() {
     
     double sidelength;
     double mat;
-    for (int i = 0; i < 1; ++i) 
+
+    for (int i = 0; i < 2; ++i) 
     {
       MaterialData<double> mat_dom;
       std::cout << "New Run _________________________________________________________\n";
@@ -241,10 +255,12 @@ int main() {
           // Make the MaterialData
           // In this case, a PEC object embedded in air
           //PEC
+          sidelength = 0.9;
+
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
-          sidelength = 1.1 + i*(perturbSize-1.0)*sidelength;
+          sidelength += i*(perturbSize-1.0)*sidelength;
           std::cout << "perturbing radius, r = " << sidelength << std::endl;
           break;
 
@@ -258,17 +274,25 @@ int main() {
       Mesh<2, 3, CUBICP> mesh;
       Point<3, double> center = {0.0, 0.0, 0.0};
 
-      // MeshGenerator::hyper_sphere(mesh, center, sidelength,
-      //                                     n_cells_per_dim);
+      MeshGenerator::hyper_sphere(mesh, center, sidelength,
+                                          n_cells_per_dim);
 
+      Mesh<2,3, CUBICP> mesh1;
 
-      MeshGenerator::square_plate(mesh, center, sidelength,
-                                      n_cells_per_dim);
+      if (perturbVar == 3)
+        sidelength *= perturbSize;
 
+      MeshGenerator::hyper_sphere(mesh1, center, sidelength,
+                                          n_cells_per_dim);    
 
+      // MeshGenerator::square_plate(mesh, center, sidelength,
+      //                                 n_cells_per_dim);
+
+      if (perturbVar == 3)
+        sidelength /= perturbSize;
 
       // double freq = 285e6;
-      Problems::AdaptiveSolver solver(&mesh, &mat_dom, 1, 5 ,5,5,5,5);
+      Problems::AdaptiveSolver solver(&mesh, &mesh1, &mat_dom, 1, 5 ,5,5,5,5);
       solver.set_plane_wave_excitation(freq, {1.0,0.0});
       std::cout << std::setprecision(12);
       double theta_sc = constants<double>::PI / 2.0;
@@ -304,6 +328,7 @@ int main() {
       for (int i = 0; i < m; ++i){
         forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*mat*8.8541878128e-12);///(0.01*2.0);//*8.8541878128e-12);
       }
+      std::cout << "FD division factor: " << ((perturbSize - 1.0)*mat*8.8541878128e-12) << std::endl;
       
     }
     else if (perturbVar == 2){
@@ -314,6 +339,8 @@ int main() {
       for (int i = 0; i < m; ++i){
         forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*freq);///(0.01*2.0);//*8.8541878128e-12);
       }
+      std::cout << "FD division factor: " << ((perturbSize - 1.0)*freq) << std::endl;
+
 
     }
     else if (perturbVar == 3){
@@ -324,6 +351,7 @@ int main() {
       for (int i = 0; i < m; ++i){
         forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*sidelength);///(0.01*2.0);//*8.8541878128e-12);
       }
+      std::cout << "FD division factor: " << ((perturbSize - 1.0)*sidelength) << std::endl;
 
     }
 

@@ -91,6 +91,7 @@ void UniformIntegrator<DoFCellType, CoefficientType, Real>::integrate_regular(
       double interm = 0.;
       for (unsigned int j = 0; j < wgl->size(); ++j) {
         // Evaluate the Jacobian...
+        std::cout << "does it make it to uniform integrator?\n";
         auto jac_value = cell_test_geom->jacobian({xgl->at(i), xgl->at(j)});
         interm += jac_value * wgl->at(j);
       }

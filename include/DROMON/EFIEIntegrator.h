@@ -560,8 +560,6 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
           double epsPerturb = exterior_material.eps * perturbSize;
           double epsrPerturb = exterior_material.epsr * perturbSize;
 
-          // std::cout << "eps: " << exterior_material.eps << "  epsPerturb: " << epsPerturb << std::endl;
-
           g = kernels::g(R, excitation.omega, epsrPerturb, exterior_material.mur);
           interm_comp_0 = -test_values(0)*trial_values(0)*unitary_test.dot(unitary_trial)*excitation.omega;
           interm_comp_1 = test_values(1)*trial_values(1)/excitation.omega;
@@ -585,6 +583,8 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_perturb(
 
           // Pour_testP *= perturbSize;
           // r_trial *= perturbSize;
+
+          // std::cout << "test_values(0): " << test_values(1) << std::endl;
 
           // double Rperturb = R * perturbSize;
           double Rperturb = (r_test*perturbSize - r_trial*perturbSize).norm();
@@ -786,7 +786,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_regular(
                                        xgl->operator[](j_test));
         // Now we must loop through all the degrees of freedom
         // For those degrees of freedom that are masked, we skip them
-        const auto unitary_test_u =
+        auto unitary_test_u =
             cell_test_geom->unitary_vector(uv_test, u_dir);
         const auto unitary_test_v =
             cell_test_geom->unitary_vector(uv_test, v_dir);
@@ -857,6 +857,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::integrate_regular(
 
                 // if(dof_trial_index == 0 && dof_test_index == 0)
                 // stdLL
+
 
                 const auto value_to_add = jacobian *
                                           integrand(test_component_value, trial_component_value,
@@ -942,6 +943,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation(
             excitation.evaluate_excitation_in_direction(r_test, unitary_test_v);
 
         const Real jacobian = wgl->at(i_test) * wgl->at(j_test);
+        // std::cout << "jacobian: " << jacobian << std::endl;
         for (unsigned int dof_test_index = 0; dof_test_index < mask_test.size();
              ++dof_test_index) {
           if (!mask_test[dof_test_index])
@@ -1080,6 +1082,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation_perturb
 //----------------------------------------------------------------------------------------------
 
         const Real jacobian = wgl->at(i_test) * wgl->at(j_test);
+
         for (unsigned int dof_test_index = 0; dof_test_index < mask_test.size();
              ++dof_test_index) {
           if (!mask_test[dof_test_index])
