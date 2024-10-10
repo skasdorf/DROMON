@@ -190,7 +190,7 @@ template <unsigned int dim, unsigned int spacedim, unsigned int patch_order>
 class AdaptiveSolver {
 public:
   AdaptiveSolver(Mesh<dim, spacedim, patch_order> *mesh, Mesh<dim, spacedim, patch_order> *mesh1,
-                 MaterialData<double> *mat_dom,
+                 MaterialData<double> *mat_dom, MaterialData<double> *mat_dom1,
                  const unsigned int &min_expansion_order = 1,
                  const unsigned int &max_expansion_order = 1,
                  const unsigned int &ngl_regular = 5,
@@ -203,6 +203,7 @@ public:
     this->mesh = mesh;
     this->mat_dom = mat_dom;
     this->mesh1 = mesh1;
+    this->mat_dom1 = mat_dom1;
 
     this->initialize_fe_collections();
     this->initialize_dof_handler();
@@ -213,7 +214,7 @@ public:
   }
   auto execute_refinement(const unsigned int& adjoint_starting_index, const double& reltol, std::vector<std::complex<double>> &forward_matrix, std::vector<std::complex<double>> &forward_excitation,
    std::vector<std::complex<double>> &forward_solution, std::vector<std::complex<double>> &adjoint_solution,
-   std::complex<double> &gradient_solution, double sidelength, int HOPSflag, int perturbVar, double perturbSize);
+   std::complex<double> &gradient_solution, std::complex<double> &gradient2_solution, double sidelength, int HOPSflag, int perturbVar, double perturbSize);
   void conduct_solution_step();
   double estimate_error();
   bool refine_mesh();
@@ -297,6 +298,7 @@ private:
   Mesh<dim, spacedim, patch_order> *mesh;
   Mesh<dim, spacedim, patch_order> *mesh1;
   MaterialData<double> *mat_dom;
+  MaterialData<double> *mat_dom1;
 
   FECollectionCollector<dim, spacedim, double> fe_collection_collector;
   FECollection<dim, spacedim, double> fe_collection_EFIE;
@@ -359,8 +361,12 @@ private:
   std::vector<std::complex<double>> forward_solution_ho_HOPS;
   std::vector<std::complex<double>> forward_system_HO_HOPS;
 
+  std::vector<std::complex<double>> solution_gradient;
+  std::vector<std::complex<double>> matrix_gradient;
+
   std::vector<std::complex<double>> forward_matrix;
   std::vector<std::complex<double>> HOPS_matrix;
+  std::vector<std::complex<double>> inverse_matrix;
   int HOPSflag;
   int perturbVar;
   double perturbSize;
@@ -381,6 +387,7 @@ private:
   Point<spacedim, double> isolation_direction;
   Point<spacedim, std::complex<double>> Esc_value;
   std::complex<double> gradient;
+  std::complex<double> gradient2;
   std::vector<double> nHat;
   double xDir;
   double yDir;
@@ -452,12 +459,16 @@ void AdaptiveSolver<dim, spacedim, patch_order>::fill_HOPS_system() {
     case 1:
     {
 
-        cg_sys_HOPS->fill_system(integrator_HOPS, *mat_dom, *excitation_HOPS, ngl_regular,
-                          ngl_vertex, ngl_edge, ngl_self);
-        cg_sys_HOPS->fill_forward_excitation(integrator_HOPS, *excitation_HOPS, *mat_dom, ngl_regular);
+        // // // This version is for mesh perturbations // // //
+        // // // system is filled as normal             // // //
+        // cg_sys_HOPS->fill_system(integrator_HOPS, *mat_dom, *excitation_HOPS, ngl_regular,
+        //                   ngl_vertex, ngl_edge, ngl_self);
+        // cg_sys_HOPS->fill_forward_excitation(integrator_HOPS, *excitation_HOPS, *mat_dom, ngl_regular);
 
-        // cg_sys_HOPS->fill_system_perturb(integrator_HOPS, *mat_dom, *excitation_HOPS , this->perturbVar, this->perturbSize, ngl_regular, ngl_vertex, ngl_edge, ngl_self);
-        // cg_sys_HOPS->fill_forward_excitation_perturb(integrator_HOPS, *excitation_HOPS, *mat_dom, this->perturbVar, this->perturbSize, ngl_regular);
+        // // //  This version is for frequency/eps perturbations (theoretically r as well) // // // 
+        // // //  perturbations here are multiplied directly within the matrix filling      // // // 
+        cg_sys_HOPS->fill_system_perturb(integrator_HOPS, *mat_dom, *excitation_HOPS , this->perturbVar, this->perturbSize, ngl_regular, ngl_vertex, ngl_edge, ngl_self);
+        cg_sys_HOPS->fill_forward_excitation_perturb(integrator_HOPS, *excitation_HOPS, *mat_dom, this->perturbVar, this->perturbSize, ngl_regular);
 
       
       // cg_sys_HOPS->fill_forward_excitation(integrator_HOPS, *excitation_HOPS, ngl_regular);
@@ -498,6 +509,11 @@ void AdaptiveSolver<dim, spacedim,
     matrix_hi_HOPS.RHS_from_galerkin_system(cg_sys_HOPS.get(), dof_handler_HOPS.get());
     this->forward_excitation_HO_HOPS  = matrix_hi_HOPS.get_RHS_copy();
 
+    std::vector<std::complex<double>> perturb_mat = matrix_hi_HOPS.get_matrix_copy();
+
+    matrix_hi_HOPS.solve_forward(false);
+    this->forward_solution_ho_HOPS  = matrix_hi_HOPS.get_solution_copy();
+
 
 
   // 1 for perturbation method, 2 for analytical
@@ -506,11 +522,11 @@ void AdaptiveSolver<dim, spacedim,
   {
     case 1:
     {
-      std::vector<std::complex<double>> perturb_mat = matrix_hi_HOPS.get_matrix_copy();
       int m = this->forward_excitation_HO_HOPS.size();
       std::vector<std::complex<double>> delta_mat(m*m);
       std::vector<std::complex<double>> delta_vec(m);
-
+      std::vector<std::complex<double>> delta_solution(m);
+      double division1, division2;
       std::complex<double> normL;
       //take the difference between perturbed and forward matrix
       for (int i = 0; i < m*m; ++i){
@@ -532,6 +548,7 @@ void AdaptiveSolver<dim, spacedim,
         else if (this->perturbVar == 3){
           delta_mat[i] = (perturb_mat[i] - this->forward_matrix[i]) / ((this->perturbSize - 1.0)*this->sidelength);
           // std::cout << "division value r: " << ((this->perturbSize - 1.0) * this->sidelength) << std::endl;
+          division1 = ((this->perturbSize - 1.0)*this->sidelength);
 
         }
       }
@@ -553,21 +570,32 @@ void AdaptiveSolver<dim, spacedim,
           double eps = mat_dom->get_material_domain(0).get_exterior().eps;
           // delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (8.8541878128e-12 * (this->perturbSize - 1.0));
           delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (eps * (this->perturbSize - 1.0));
+
+          delta_solution[i] = (this->forward_solution_ho_HOPS[i] - this->forward_solution_ho[i]) / (eps * (this->perturbSize - 1.0));
+          // delta_solution[i] = 0.0;
         }
         //pertrub freq
         else if (this->perturbVar == 2){
           delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (this->freq * 2 * 3.1415926535 * (this->perturbSize - 1.0));
+
+          delta_solution[i] = (this->forward_solution_ho_HOPS[i] - this->forward_solution_ho[i]) / (this->freq * 2 * 3.1415926535 * (this->perturbSize - 1.0));
         }
         // perturb radius
         else if (this->perturbVar == 3){
           delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / ((this->perturbSize - 1.0)*this->sidelength);
+          division2 = ((this->perturbSize - 1.0)*this->sidelength);
+
+          delta_solution[i] = (this->forward_solution_ho_HOPS[i] - this->forward_solution_ho[i]) / ((this->perturbSize - 1.0)*this->sidelength);
         }
       }
       //store
       // auto forward_system_HO_HOPS = product;
       this->forward_system_HO_HOPS = product;
       this->forward_excitation_HO_HOPS = delta_vec;
+      this->solution_gradient = delta_solution;
+      this->matrix_gradient = delta_mat;
 
+      std::cout << "division1: " << division1 << "   dvision2: " << division2 << std::endl;
 
       break;
     }
@@ -577,6 +605,7 @@ void AdaptiveSolver<dim, spacedim,
       auto forward_system_HO_HOPS = matrix_hi_HOPS.multiply(this->forward_solution_ho);
       this->forward_system_HO_HOPS = forward_system_HO_HOPS;
       this->HOPS_matrix = matrix_hi_HOPS.get_matrix_copy();
+      this->matrix_gradient = this->HOPS_matrix;
 
       break;
     }
@@ -727,15 +756,17 @@ void AdaptiveSolver<dim, spacedim,
     // // //                                       int(m_rows), 1, matrix_data, lda, &ipiv[0], rhs_data, ldb)
 
     // std::cout << "m size: " << m << std::endl;
-    // int* ipiv = new int[m];
-    // lapack_int lda = m;
-    // std::vector<std::complex<double>> inverse_mat = forward_matrix;
+    int* ipiv = new int[m];
+    lapack_int lda = m;
+    std::vector<std::complex<double>> inverse_mat = forward_matrix;
     // std::vector<std::complex<double>> inverse_mat_conjTransp = forward_matrix;
     // // std::vector<std::complex<double>> test_vec1(m);
     
     // // std::complex<double>* mat = &forward_matrix[0];
-    // auto error = LAPACKE_zgetrf(LAPACK_ROW_MAJOR, int(m), int(m), &inverse_mat[0], lda, &ipiv[0]);
-    // auto ierror = LAPACKE_zgetri(LAPACK_ROW_MAJOR, m, &inverse_mat[0], m, &ipiv[0]);
+    auto error = LAPACKE_zgetrf(LAPACK_ROW_MAJOR, int(m), int(m), &inverse_mat[0], lda, &ipiv[0]);
+    auto ierror = LAPACKE_zgetri(LAPACK_ROW_MAJOR, m, &inverse_mat[0], m, &ipiv[0]);
+
+    this->inverse_matrix = inverse_mat;
 
 
     // std::vector<std::complex<double>> inverse2_mat = inverse_mat;
@@ -859,7 +890,7 @@ void AdaptiveSolver<dim, spacedim, patch_order>::solve(const unsigned int& adjoi
 template <unsigned int dim, unsigned int spacedim, unsigned int patch_order>
 auto AdaptiveSolver<dim, spacedim, patch_order>::execute_refinement(const unsigned int& adjoint_starting_index, const double &reltol, std::vector<std::complex<double>> &forward_matrix, 
 std::vector<std::complex<double>> &forward_excitation, std::vector<std::complex<double>> &forward_solution, 
-std::vector<std::complex<double>> &adjoint_solution, std::complex<double> &gradient_solution, double sidelength, int HOPSflag, int perturbVar, double perturbSize)
+std::vector<std::complex<double>> &adjoint_solution, std::complex<double> &gradient_solution, std::complex<double> &gradient2_solution, double sidelength, int HOPSflag, int perturbVar, double perturbSize)
 {
 
   this->perturbVar = perturbVar;
@@ -890,8 +921,10 @@ std::vector<std::complex<double>> &adjoint_solution, std::complex<double> &gradi
   forward_excitation = this->forward_excitation_HO;
   forward_solution = this->forward_solution_ho;
   adjoint_solution = this->current_adjoint_solution;
-  if (HOPSflag)
+  if (HOPSflag){
     gradient_solution = this->gradient;
+    gradient2_solution = this->gradient2;
+  }
 
   return this->out2;
 }
@@ -943,7 +976,34 @@ void AdaptiveSolver<dim, spacedim,
       // std::cout << "deltaG: " << this->forward_excitation_HO_HOPS[i] << "   deltaL*u: " << this->forward_system_HO_HOPS[i] << std::endl;
     }
     this->gradient = gradient;
-    std::cout << "gradient: " << gradient << std::endl << std::endl;
+    std::cout << "gradient: " << gradient << std::endl;
+
+    //second order
+    std::vector<std::complex<double>> product(m);
+    std::vector<std::complex<double>> gradSol(m);
+
+    for (int i = 0; i < m; ++i){
+      for (int j = 0; j < m; ++j){
+
+        gradSol[i] += this->inverse_matrix[i*m+j] * (this->forward_excitation_HO_HOPS[j] - this->forward_system_HO_HOPS[j]);
+
+      }
+    }
+
+    for (unsigned int i =0; i < m; ++i)
+    {
+      for (unsigned int j =0; j < m; ++j)
+      {
+        // product[i] += this->matrix_gradient[i*m+j]*this->solution_gradient[j];
+        product[i] += this->matrix_gradient[i*m+j]*gradSol[j];
+      }
+    }
+
+    for (int i = 0; i < m; ++i){
+      gradient2 += (-product[i]) * std::conj(this->current_adjoint_solution[i]) * 2.0;
+    }
+    this->gradient2 = gradient2;
+    std::cout << "second order gradient: " << gradient2 << std::endl << std::endl;
   }
 
 

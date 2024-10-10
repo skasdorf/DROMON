@@ -35,6 +35,8 @@ int main() {
   std::vector<std::complex<double>> adjoint_solution1;
   std::complex<double> gradient0;
   std::complex<double> gradient1;
+  std::complex<double> gradient2_0;
+  std::complex<double> gradient2_1;
   double wave;
   double freq;
 
@@ -44,14 +46,14 @@ int main() {
   int runMode = 1;
 
   //1 for material params, 2 for frequency, 3 for radius
-  int perturbVar = 3;
+  int perturbVar = 1;
 
   //perturbation size
   // double perturbSize = 1.0000001;
-  double perturbSize = 1.000001;
+  double perturbSize = 1.0001;
 
 
-  unsigned int n_cells_per_dim = 9;
+  unsigned int n_cells_per_dim = 6;
   freq = 500.0e6;
 
 
@@ -99,6 +101,7 @@ int main() {
       std::cout << "New Run _________________________________________________________\n";
 
       MaterialData<double> mat_dom;
+      MaterialData<double> mat_dom1;
       double sidelength;
       std::string saveName;
 
@@ -113,6 +116,10 @@ int main() {
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(normalDist[i], 1.0, false, false)));
+
+          mat_dom1.push_back(dromon::MaterialDomain<double>(
+          dromon::Material<double>(1.0, 1.0, true, false),
+          dromon::Material<double>(normalDist[i]*perturbSize, 1.0, false, false)));
           sidelength = 1.0;
           saveName = "./output/MC_mu80_sig3_plate_analyt.txt";
           
@@ -125,6 +132,11 @@ int main() {
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
+
+          mat_dom1.push_back(dromon::MaterialDomain<double>(
+          dromon::Material<double>(1.0, 1.0, true, false),
+          dromon::Material<double>(1.0, 1.0, false, false)));
+
           sidelength = 1.0;
           freq = normalDist[i];
           saveName = "./output/MC_mu400_sig25_Gcheck.txt";
@@ -140,8 +152,13 @@ int main() {
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
+
+          mat_dom1.push_back(dromon::MaterialDomain<double>(
+          dromon::Material<double>(1.0, 1.0, true, false),
+          dromon::Material<double>(1.0, 1.0, false, false)));
+
           sidelength = normalDist[i];
-          saveName = "./output/MC_mu1_sig0p1_sphere.txt";
+          saveName = "./output/MC_mu1_sig0p1_plate.txt";
 
           break;
         }
@@ -152,21 +169,24 @@ int main() {
       Mesh<2, 3, CUBICP> mesh;
       Point<3, double> center = {0.0, 0.0, 0.0};
 
-      // MeshGenerator::square_plate(mesh, center, sidelength,
-      //                                 n_cells_per_dim);
+      MeshGenerator::square_plate(mesh, center, sidelength,
+                                      n_cells_per_dim);
 
-      MeshGenerator::hyper_sphere(mesh, center, sidelength,
-                                          n_cells_per_dim);
+      // MeshGenerator::hyper_sphere(mesh, center, sidelength,
+      //                                     n_cells_per_dim);
 
       Mesh<2,3, CUBICP> mesh1;
       
       if (perturbVar == 3)
         sidelength *= perturbSize;
 
-      MeshGenerator::hyper_sphere(mesh1, center, sidelength,
-                                          n_cells_per_dim);
+      // MeshGenerator::hyper_sphere(mesh1, center, sidelength,
+      //                                     n_cells_per_dim);
 
-      Problems::AdaptiveSolver solver(&mesh, &mesh1, &mat_dom, 1, 10 ,5,5,5,5);
+      MeshGenerator::square_plate(mesh1, center, sidelength,
+                                n_cells_per_dim);
+
+      Problems::AdaptiveSolver solver(&mesh, &mesh1, &mat_dom, &mat_dom1, 1, 10 ,5,5,5,5);
       solver.set_plane_wave_excitation(freq, {1.0,0.0});
 
 
@@ -179,13 +199,13 @@ int main() {
 
       double theta_sc = constants<double>::PI / 2.0;
       double phi_sc = 0.0;
-      double R_dist_scalar = 1000.0;
+      double R_dist_scalar = 100.0;
       // R_dist_scalar *= wave;
       solver.set_scattering_parameters(theta_sc,phi_sc,R_dist_scalar,{0.0,0.0,1.0});
 
       auto t1 = std::chrono::high_resolution_clock::now();
 
-      out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, sidelength, 1, perturbVar, perturbSize);
+      out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, gradient2_0, sidelength, 1, perturbVar, perturbSize);
 
       auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -197,7 +217,7 @@ int main() {
       //  out2.push_back(output);
       std::complex<double> RCS = 4.0*3.14159*R_dist_scalar*R_dist_scalar*out1*std::conj(out1);
       std::ofstream outFile(saveName, std::ios_base::app);
-      outFile << normalDist[i] << "\t" << wave << "\t" << RCS << "\t" << out1 << "\t" << gradient0 <<  "\n";
+      outFile << normalDist[i] << "\t" << wave << "\t" << RCS << "\t" << out1 << "\t" << gradient0 << "\t" << gradient2_0 << "\n";
 
 
     }
@@ -212,6 +232,7 @@ int main() {
     for (int i = 0; i < 2; ++i) 
     {
       MaterialData<double> mat_dom;
+      MaterialData<double> mat_dom1;
       std::cout << "New Run _________________________________________________________\n";
 
       switch (perturbVar)
@@ -223,10 +244,17 @@ int main() {
           // In this case, a PEC object embedded in air
           //PEC
           // mat_dom.clear();
-          mat = 1.0 + i*mat*(perturbSize - 1.0);
+          mat = 1.0;
+          mat += i*mat*(perturbSize - 1.0);
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(mat, 1.0, false, false)));
+
+          
+          mat_dom1.push_back(dromon::MaterialDomain<double>(
+          dromon::Material<double>(1.0, 1.0, true, false),
+          dromon::Material<double>(mat, 1.0, false, false)));
+
           std::cout << "perturbing Material, eps = " << mat << std::endl;
           sidelength = 1.0;// / wave;
           break;
@@ -241,6 +269,11 @@ int main() {
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
+
+          mat_dom1.push_back(dromon::MaterialDomain<double>(
+          dromon::Material<double>(1.0, 1.0, true, false),
+          dromon::Material<double>(1.0, 1.0, false, false)));
+
           sidelength = 1.0;// / wave;
           freq = freq + i*freq*(perturbSize-1.0);
           std::cout << "perturbing freq, f = " << freq << std::endl;
@@ -255,11 +288,16 @@ int main() {
           // Make the MaterialData
           // In this case, a PEC object embedded in air
           //PEC
-          sidelength = 0.9;
+          sidelength = 4.0;
 
           mat_dom.push_back(dromon::MaterialDomain<double>(
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(1.0, 1.0, false, false)));
+
+          mat_dom1.push_back(dromon::MaterialDomain<double>(
+          dromon::Material<double>(1.0, 1.0, true, false),
+          dromon::Material<double>(1.0, 1.0, false, false)));
+
           sidelength += i*(perturbSize-1.0)*sidelength;
           std::cout << "perturbing radius, r = " << sidelength << std::endl;
           break;
@@ -274,39 +312,45 @@ int main() {
       Mesh<2, 3, CUBICP> mesh;
       Point<3, double> center = {0.0, 0.0, 0.0};
 
-      MeshGenerator::hyper_sphere(mesh, center, sidelength,
-                                          n_cells_per_dim);
+      // MeshGenerator::hyper_sphere(mesh, center, sidelength,
+      //                                     n_cells_per_dim);
+
+      MeshGenerator::square_plate(mesh, center, sidelength,
+                                n_cells_per_dim);
 
       Mesh<2,3, CUBICP> mesh1;
 
       if (perturbVar == 3)
         sidelength *= perturbSize;
 
-      MeshGenerator::hyper_sphere(mesh1, center, sidelength,
-                                          n_cells_per_dim);    
+      // MeshGenerator::hyper_sphere(mesh1, center, sidelength,
+      //                                     n_cells_per_dim);
 
-      // MeshGenerator::square_plate(mesh, center, sidelength,
-      //                                 n_cells_per_dim);
+      MeshGenerator::square_plate(mesh1, center, sidelength,
+                                n_cells_per_dim);    
+
+      // for (int i = 0; i < mesh.n_nodes(); ++i)
+      // std::cout << "mesh nodes: " << *mesh.get_node(i) << std::endl;
 
       if (perturbVar == 3)
         sidelength /= perturbSize;
 
       // double freq = 285e6;
-      Problems::AdaptiveSolver solver(&mesh, &mesh1, &mat_dom, 1, 5 ,5,5,5,5);
+      Problems::AdaptiveSolver solver(&mesh, &mesh1, &mat_dom, &mat_dom1, 1, 10 ,5,5,5,5);
       solver.set_plane_wave_excitation(freq, {1.0,0.0});
       std::cout << std::setprecision(12);
       double theta_sc = constants<double>::PI / 2.0;
       double phi_sc = 0.0;
-      double R_dist_scalar = 100.0;
+      double R_dist_scalar = 1000.0;
       // R_dist_scalar *= wave;
-      solver.set_scattering_parameters(theta_sc,phi_sc,R_dist_scalar,{0.0,0.0,1.0});
+      solver.set_scattering_parameters(theta_sc,phi_sc,R_dist_scalar,{0.0,0.0,-1.0});
 
       auto t1 = std::chrono::high_resolution_clock::now();
 
       if (i == 0)
-        out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, sidelength, 1, perturbVar, perturbSize);
+        out1 = solver.execute_refinement(1, 0.01, forward_matrix0, forward_excitation0, forward_solution0, adjoint_solution0, gradient0, gradient2_0, sidelength, 1, perturbVar, perturbSize);
       if (i == 1)
-        out2 = solver.execute_refinement(1, 0.01, forward_matrix1, forward_excitation1, forward_solution1, adjoint_solution1, gradient1, sidelength, 1, perturbVar, perturbSize);
+        out2 = solver.execute_refinement(1, 0.01, forward_matrix1, forward_excitation1, forward_solution1, adjoint_solution1, gradient1, gradient2_1, sidelength, 1, perturbVar, perturbSize);
 
       auto t2 = std::chrono::high_resolution_clock::now();
       auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1);
@@ -346,10 +390,10 @@ int main() {
     else if (perturbVar == 3){
 
       for (int i = 0; i < m*m; ++i){
-        forward_matrix_grad[i] = (forward_matrix1[i] - forward_matrix0[i])/((perturbSize - 1.0)*sidelength);///(0.01*2.0);//*8.8541878128e-12);
+        forward_matrix_grad[i] = (forward_matrix1[i] - forward_matrix0[i])/((perturbSize - 1.0)*2.);///(0.01*2.0);//*8.8541878128e-12);
       }
       for (int i = 0; i < m; ++i){
-        forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*sidelength);///(0.01*2.0);//*8.8541878128e-12);
+        forward_excitation_grad[i] = (forward_excitation1[i] - forward_excitation0[i])/((perturbSize - 1.0)*2.);///(0.01*2.0);//*8.8541878128e-12);
       }
       std::cout << "FD division factor: " << ((perturbSize - 1.0)*sidelength) << std::endl;
 
