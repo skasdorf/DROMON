@@ -53,7 +53,7 @@ int main() {
   double perturbSize = 1.0001;
 
 
-  unsigned int n_cells_per_dim = 6;
+  unsigned int n_cells_per_dim = 7;
   freq = 500.0e6;
 
 
@@ -121,7 +121,7 @@ int main() {
           dromon::Material<double>(1.0, 1.0, true, false),
           dromon::Material<double>(normalDist[i]*perturbSize, 1.0, false, false)));
           sidelength = 1.0;
-          saveName = "./output/MC_mu80_sig3_plate_analyt.txt";
+          saveName = "./output/MC_mu80_sig3_plate_noSecondTerms.txt";
           
           break;
         }

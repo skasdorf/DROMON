@@ -270,6 +270,14 @@ private:
       fe_collection_EFIE_HOPS.push_back(&current_fe);
     }
     fe_collection_collector_HOPS.push_back(fe_collection_EFIE_HOPS);
+
+    for (unsigned int exps = min_expansion_order; exps <= max_expansion_order;
+         ++exps) {
+      auto current_fe =
+          FE_HdivMaxOrtho<dim, spacedim, double>(exps, CurrentType::Electric);
+      fe_collection_EFIE_HOPS2.push_back(&current_fe);
+    }
+    fe_collection_collector_HOPS2.push_back(fe_collection_EFIE_HOPS2);
   }
 
   void initialize_dof_handler() {
@@ -283,6 +291,11 @@ private:
     this->dof_handler_HOPS = std::make_unique<DoFHandler<dim, spacedim>>(
         DoFHandler<dim, spacedim>(*this->mesh1));
     this->dof_handler_projection_HOPS = std::make_unique<DoFHandler<dim, spacedim>>(
+        DoFHandler<dim, spacedim>(*this->mesh1));
+
+    this->dof_handler_HOPS2 = std::make_unique<DoFHandler<dim, spacedim>>(
+        DoFHandler<dim, spacedim>(*this->mesh1));
+    this->dof_handler_projection_HOPS2 = std::make_unique<DoFHandler<dim, spacedim>>(
         DoFHandler<dim, spacedim>(*this->mesh1));
   }
   bool check_error_estimation_correctness = true;
@@ -306,14 +319,24 @@ private:
   FECollectionCollector<dim, spacedim, double> fe_collection_collector_HOPS;
   FECollection<dim, spacedim, double> fe_collection_EFIE_HOPS;
 
+  FECollectionCollector<dim, spacedim, double> fe_collection_collector_HOPS2;
+  FECollection<dim, spacedim, double> fe_collection_EFIE_HOPS2;
+
   std::unique_ptr<DoFHandler<dim, spacedim>> dof_handler;
   std::unique_ptr<DoFHandler<dim, spacedim>> dof_handler_projection;
 
   std::unique_ptr<DoFHandler<dim, spacedim>> dof_handler_HOPS;
   std::unique_ptr<DoFHandler<dim, spacedim>> dof_handler_projection_HOPS;
 
+    std::unique_ptr<DoFHandler<dim, spacedim>> dof_handler_HOPS2;
+  std::unique_ptr<DoFHandler<dim, spacedim>> dof_handler_projection_HOPS2;
+
   std::unique_ptr<GalerkinSystem<dim, spacedim>> cg_sys;
+  std::unique_ptr<GalerkinSystem<dim, spacedim>> cg_sys2;
+
   std::unique_ptr<GalerkinSystem<dim, spacedim>> cg_sys_HOPS;
+  std::unique_ptr<GalerkinSystem<dim, spacedim>> cg_sys_HOPS2;
+
 
   std::complex<double> out2;
   double sidelength;
@@ -325,6 +348,7 @@ private:
 
   std::unique_ptr<Excitations::PlaneWave<spacedim, double>> excitation;
   std::unique_ptr<Excitations::PlaneWave<spacedim, double>> excitation_HOPS;
+  std::unique_ptr<Excitations::PlaneWave<spacedim, double>> excitation_HOPS2;
 
   // Here we define pointers for the implemented adjoint excitations,
   // though only one may be active at a time currently
@@ -338,7 +362,7 @@ private:
   std::unique_ptr<Excitations::AdjointScatteredFieldExcitation<
       dromon::DoFParent<dim, spacedim, double>, std::complex<double>, double,
       double>>
-      adjoint_excitation_HOPS;
+      adjoint_excitation_Esc2;
 
   std::unique_ptr<Excitations::AdjointRCSExcitation<
       dromon::DoFParent<dim, spacedim, double>, std::complex<double>, double,
@@ -347,22 +371,34 @@ private:
 
   EFIEIntegrator<DoFParent<dim, spacedim>, std::complex<double>> integrator;
   EFIEIntegrator<DoFParent<dim, spacedim>, std::complex<double>> integrator_HOPS;
+  EFIEIntegrator<DoFParent<dim, spacedim>, std::complex<double>> integrator_HOPS2;
+
 
   std::vector<std::complex<double>> current_forward_solution;
   std::vector<std::complex<double>> current_adjoint_solution;
   std::vector<std::complex<double>> current_adjoint_rhs;
+  std::vector<std::complex<double>> current_adjoint_rhs2;
   std::vector<std::complex<double>> forward_excitation_HO;
   std::vector<std::complex<double>> forward_solution_ho;
 
   std::vector<std::complex<double>> current_forward_solution_HOPS;
-  std::vector<std::complex<double>> current_adjoint_solution_HOPS;
-  std::vector<std::complex<double>> current_adjoint_rhs_HOPS;
+  std::vector<std::complex<double>> current_forward_solution_HOPS2;
+
   std::vector<std::complex<double>> forward_excitation_HO_HOPS;
+  std::vector<std::complex<double>> forward_excitation_HO_HOPS2;
+
   std::vector<std::complex<double>> forward_solution_ho_HOPS;
+  std::vector<std::complex<double>> forward_solution_ho_HOPS2;
+
   std::vector<std::complex<double>> forward_system_HO_HOPS;
+  std::vector<std::complex<double>> forward_system_HO_HOPS2;
 
   std::vector<std::complex<double>> solution_gradient;
   std::vector<std::complex<double>> matrix_gradient;
+
+  std::vector<std::complex<double>> solution_gradient2;
+  std::vector<std::complex<double>> matrix_gradient2;
+  std::vector<std::complex<double>> excitation_gradient2;
 
   std::vector<std::complex<double>> forward_matrix;
   std::vector<std::complex<double>> HOPS_matrix;
@@ -407,13 +443,24 @@ void AdaptiveSolver<dim, spacedim, patch_order>::initialize_DoF_systems(
   this->dof_handler_HOPS->distribute_dofs(&fe_collection_collector_HOPS,
                                      initial_fe_index);
 
+  this->dof_handler_HOPS2->distribute_dofs(&fe_collection_collector_HOPS2,
+                                     initial_fe_index);                                     
+
   this->cg_sys = std::make_unique<GalerkinSystem<dim, spacedim>>(
       GalerkinSystem<dim, spacedim>(this->dof_handler.get()));
   this->cg_sys->update_system_size();
 
+  this->cg_sys2 = std::make_unique<GalerkinSystem<dim, spacedim>>(
+      GalerkinSystem<dim, spacedim>(this->dof_handler.get()));
+  this->cg_sys2->update_system_size();
+
   this->cg_sys_HOPS = std::make_unique<GalerkinSystem<dim, spacedim>>(
       GalerkinSystem<dim, spacedim>(this->dof_handler_HOPS.get()));
   this->cg_sys_HOPS->update_system_size();
+
+  this->cg_sys_HOPS2 = std::make_unique<GalerkinSystem<dim, spacedim>>(
+      GalerkinSystem<dim, spacedim>(this->dof_handler_HOPS2.get()));
+  this->cg_sys_HOPS2->update_system_size();  
 }
 
 //needs to be seperated out into fill_forward_system and fill_HOPS_system
@@ -426,10 +473,14 @@ void AdaptiveSolver<dim, spacedim, patch_order>::fill_forward_system() {
   std::cout << "N active DoFs: " << dof_handler->get_n_active_dofs()
             << std::endl;
   cg_sys->update_system_size();
+  cg_sys2->update_system_size();
+
 
   // Now, since we do not want to perform unnecessary integrals, we set the DoF
   // Mask
   cg_sys->set_mask_from_dof_activity();
+  cg_sys2->set_mask_from_dof_activity();
+
 
 
   // Now we need to fill the system
@@ -448,9 +499,12 @@ void AdaptiveSolver<dim, spacedim, patch_order>::fill_HOPS_system() {
 
 
   dof_handler_HOPS->distribute_dofs(&fe_collection_collector_HOPS);
-
   cg_sys_HOPS->update_system_size();
   cg_sys_HOPS->set_mask_from_dof_activity();
+
+  dof_handler_HOPS2->distribute_dofs(&fe_collection_collector_HOPS2);
+  cg_sys_HOPS2->update_system_size();
+  cg_sys_HOPS2->set_mask_from_dof_activity();
 
   // 1 for perturbation method, 2 for analytical
   int HOPSmode = 1;
@@ -470,6 +524,11 @@ void AdaptiveSolver<dim, spacedim, patch_order>::fill_HOPS_system() {
         cg_sys_HOPS->fill_system_perturb(integrator_HOPS, *mat_dom, *excitation_HOPS , this->perturbVar, this->perturbSize, ngl_regular, ngl_vertex, ngl_edge, ngl_self);
         cg_sys_HOPS->fill_forward_excitation_perturb(integrator_HOPS, *excitation_HOPS, *mat_dom, this->perturbVar, this->perturbSize, ngl_regular);
 
+        // // // This version is for calculating second order terms                        // // //
+        // // // HOPS would be for x(i+h), HOPS2 is x(i-h), and the forward system is x(i) // // //
+        // // // then a second order central FD can be performed to calculated second order terms // //
+        cg_sys_HOPS2->fill_system_perturb(integrator_HOPS2, *mat_dom, *excitation_HOPS2 , this->perturbVar, (2.0-this->perturbSize), ngl_regular, ngl_vertex, ngl_edge, ngl_self);
+        cg_sys_HOPS2->fill_forward_excitation_perturb(integrator_HOPS2, *excitation_HOPS2, *mat_dom, this->perturbVar, (2.0-this->perturbSize), ngl_regular);        
       
       // cg_sys_HOPS->fill_forward_excitation(integrator_HOPS, *excitation_HOPS, ngl_regular);
       // cg_sys_HOPS->fill_system(integrator_HOPS, *mat_dom, *excitation_HOPS, ngl_regular, ngl_vertex, ngl_edge, ngl_self);
@@ -498,22 +557,36 @@ void AdaptiveSolver<dim, spacedim,
                                     dromon::MatrixSolvingPolicies::MKLPolicy>
         matrix_hi_HOPS(dof_handler->get_n_active_dofs(),
                   dof_handler->get_n_active_dofs());
+
+        dromon::MatrixSolving::Matrix<std::complex<double>,
+                                    dromon::MatrixSolvingPolicies::MKLPolicy>
+        matrix_hi_HOPS2(dof_handler->get_n_active_dofs(),
+                  dof_handler->get_n_active_dofs());
+
     // this->excitation_HOPS.reset();
     this->excitation_HOPS = std::make_unique<Excitations::PlaneWave<spacedim, double>>(
       Excitations::PlaneWave<spacedim, double>(freq, {1.0, 0.0}, theta_inc,
                                                phi_inc, *mat_dom));
+
+    this->excitation_HOPS2 = std::make_unique<Excitations::PlaneWave<spacedim, double>>(
+      Excitations::PlaneWave<spacedim, double>(freq, {1.0, 0.0}, theta_inc,
+                                               phi_inc, *mat_dom));                                               
 
     this->fill_HOPS_system();
 
     matrix_hi_HOPS.matrix_from_galerkin_system(cg_sys_HOPS.get(), dof_handler_HOPS.get());
     matrix_hi_HOPS.RHS_from_galerkin_system(cg_sys_HOPS.get(), dof_handler_HOPS.get());
     this->forward_excitation_HO_HOPS  = matrix_hi_HOPS.get_RHS_copy();
-
     std::vector<std::complex<double>> perturb_mat = matrix_hi_HOPS.get_matrix_copy();
-
     matrix_hi_HOPS.solve_forward(false);
     this->forward_solution_ho_HOPS  = matrix_hi_HOPS.get_solution_copy();
 
+    matrix_hi_HOPS2.matrix_from_galerkin_system(cg_sys_HOPS2.get(), dof_handler_HOPS2.get());
+    matrix_hi_HOPS2.RHS_from_galerkin_system(cg_sys_HOPS2.get(), dof_handler_HOPS2.get());
+    this->forward_excitation_HO_HOPS2  = matrix_hi_HOPS2.get_RHS_copy();
+    std::vector<std::complex<double>> perturb_mat2 = matrix_hi_HOPS2.get_matrix_copy();
+    matrix_hi_HOPS.solve_forward(false);
+    this->forward_solution_ho_HOPS2  = matrix_hi_HOPS2.get_solution_copy();    
 
 
   // 1 for perturbation method, 2 for analytical
@@ -526,6 +599,12 @@ void AdaptiveSolver<dim, spacedim,
       std::vector<std::complex<double>> delta_mat(m*m);
       std::vector<std::complex<double>> delta_vec(m);
       std::vector<std::complex<double>> delta_solution(m);
+
+      std::vector<std::complex<double>> delta_mat2(m*m);
+      std::vector<std::complex<double>> delta_vec2(m);
+      std::vector<std::complex<double>> delta_solution2(m);
+      std::vector<std::complex<double>> delta_excitation2(m);
+
       double division1, division2;
       std::complex<double> normL;
       //take the difference between perturbed and forward matrix
@@ -533,9 +612,11 @@ void AdaptiveSolver<dim, spacedim,
 
         // //perturb material (this isn't quite right, should be eps*0.01 and not eps_0 *0.01)
         if (this->perturbVar == 1){
-          double eps = mat_dom->get_material_domain(0).get_exterior().eps;
+          double eps = mat_dom->get_material_domain(0).get_exterior().epsr;
           // delta_mat[i] = (perturb_mat[i] - this->forward_matrix[i]) / (8.8541878128e-12 * 0.01);
           delta_mat[i] = (perturb_mat[i] - this->forward_matrix[i]) / ((this->perturbSize - 1.0) * eps);
+          delta_mat2[i] = (perturb_mat[i] - 2.0*this->forward_matrix[i] + perturb_mat2[i]) / (eps * (this->perturbSize - 1.0)) / (eps * (this->perturbSize - 1.0));
+
           // std::cout << "division value: " << ((this->perturbSize - 1.0) * eps) << std::endl;
         }
         //perturb frequency
@@ -567,11 +648,14 @@ void AdaptiveSolver<dim, spacedim,
 
         // perturb material
         if (this->perturbVar == 1){
-          double eps = mat_dom->get_material_domain(0).get_exterior().eps;
+          double eps = mat_dom->get_material_domain(0).get_exterior().epsr;
           // delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (8.8541878128e-12 * (this->perturbSize - 1.0));
           delta_vec[i] = (this->forward_excitation_HO_HOPS[i] - this->forward_excitation_HO[i]) / (eps * (this->perturbSize - 1.0));
 
           delta_solution[i] = (this->forward_solution_ho_HOPS[i] - this->forward_solution_ho[i]) / (eps * (this->perturbSize - 1.0));
+          delta_solution2[i] = (this->forward_solution_ho_HOPS[i] - 2.0 * this->forward_solution_ho[i] + this->forward_solution_ho_HOPS2[i]) / (eps * (this->perturbSize - 1.0)) / (eps * (this->perturbSize - 1.0));
+          delta_excitation2[i] = (this->forward_excitation_HO_HOPS[i] - 2.0 * this->forward_excitation_HO[i] + this->forward_excitation_HO_HOPS2[i]) / (eps * (this->perturbSize - 1.0)) / (eps * (this->perturbSize - 1.0));
+
           // delta_solution[i] = 0.0;
         }
         //pertrub freq
@@ -593,7 +677,10 @@ void AdaptiveSolver<dim, spacedim,
       this->forward_system_HO_HOPS = product;
       this->forward_excitation_HO_HOPS = delta_vec;
       this->solution_gradient = delta_solution;
+      this->solution_gradient2 = delta_solution2;
       this->matrix_gradient = delta_mat;
+      this->matrix_gradient2 = delta_mat2;
+      this->excitation_gradient2 = delta_excitation2;
 
       std::cout << "division1: " << division1 << "   dvision2: " << division2 << std::endl;
 
@@ -620,8 +707,10 @@ void AdaptiveSolver<dim, spacedim,
 
 template <unsigned int dim, unsigned int spacedim, unsigned int patch_order>
 void AdaptiveSolver<dim, spacedim, patch_order>::fill_adjoint_excitation() {
-  if (use_Esc_QoI)
+  if (use_Esc_QoI){
     cg_sys->fill_adjoint_excitation(*adjoint_excitation_Esc, ngl_regular);
+    cg_sys->fill_adjoint_excitation_perturb(*adjoint_excitation_Esc2, ngl_regular, this->perturbSize);
+  }
   else if (use_RCS_QoI)
     cg_sys->fill_adjoint_excitation(*adjoint_excitation_RCS, ngl_regular);
   else {
@@ -679,6 +768,18 @@ void AdaptiveSolver<dim, spacedim,
     cg_sys->fill_adjoint_excitation(*adjoint_excitation_Esc,
                                     this->ngl_regular);
 
+    this->adjoint_excitation_Esc2.reset();
+    this->adjoint_excitation_Esc2 =
+          std::make_unique<Excitations::AdjointScatteredFieldExcitation<
+          dromon::DoFParent<dim, spacedim, double>,
+          std::complex<double>, double, double>>(Excitations::AdjointScatteredFieldExcitation<
+          dromon::DoFParent<dim, spacedim, double>,
+          std::complex<double>, double, double>(
+          freq, theta_sc, phi_sc, isolation_direction, R_dist_scalar));
+    // Now fill the adjoint excitation
+    cg_sys2->fill_adjoint_excitation_perturb(*adjoint_excitation_Esc2,
+                                    this->ngl_regular, this->perturbSize);                                    
+
   } else if (use_RCS_QoI) {
     this->qoi_out = this->post_process_RCS();
     // We first have to use the forward solution to compute the scattered
@@ -702,9 +803,19 @@ void AdaptiveSolver<dim, spacedim,
         matrix_hi(dof_handler->get_n_active_dofs(),
         dof_handler->get_n_active_dofs());
 
+    dromon::MatrixSolving::Matrix<std::complex<double>,
+        dromon::MatrixSolvingPolicies::MKLPolicy>
+        matrix_hi2(dof_handler->get_n_active_dofs(),
+        dof_handler->get_n_active_dofs());
+
     matrix_hi.matrix_from_galerkin_system(cg_sys.get(), dof_handler.get());
     matrix_hi.adjoint_RHS_from_galerkin_system(cg_sys.get(), dof_handler.get());
     this->current_adjoint_rhs  = matrix_hi.get_RHS_copy();
+
+    // matrix_hi2.matrix_from_galerkin_system(cg_sys2.get(), dof_handler.get());
+    matrix_hi2.adjoint_RHS_from_galerkin_system(cg_sys2.get(), dof_handler.get());
+    this->current_adjoint_rhs2 = matrix_hi2.get_RHS_copy();
+
     auto t1 = std::chrono::high_resolution_clock::now();
     matrix_hi.solve_adjoint(false);
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -978,30 +1089,84 @@ void AdaptiveSolver<dim, spacedim,
     this->gradient = gradient;
     std::cout << "gradient: " << gradient << std::endl;
 
-    //second order
+
+    //checking gradient alternate formulation
+    std::vector<std::complex<double>> vecProd(m);
+    for (int i = 0; i < m; ++i){
+      for (int j = 0; j < m; ++j){     
+        vecProd[i] += this->inverse_matrix[i*m+j] * (this->forward_excitation_HO_HOPS[j] - this->forward_system_HO_HOPS[j]);
+      }
+    }
+    std::complex<double> check;
+    for (int i = 0; i < m; ++i){
+      check += vecProd[i] * std::conj(this->current_adjoint_rhs[i]);
+    }
+
+    std::cout << "gradient check: ----- " << check << std::endl;
+
+    //second order // ------------------------------------------------
     std::vector<std::complex<double>> product(m);
     std::vector<std::complex<double>> gradSol(m);
+    std::vector<std::complex<double>> adjoint_excitation_gradient(m);
+    std::vector<std::complex<double>> vecProd2(m);
+    std::vector<std::complex<double>> vec2(m);
+    double eps = mat_dom->get_material_domain(0).get_exterior().epsr;
+
+
+    for (int i = 0; i < m; ++i){
+      adjoint_excitation_gradient[i] = (this->current_adjoint_rhs2[i] - this->current_adjoint_rhs[i]) / (eps * (this->perturbSize - 1.0));
+    }
+
+    std::vector<std::complex<double>> mat(m);
+    std::vector<std::complex<double>> mat2(m);
+    for (int i = 0; i < m; ++i){
+      for (int j = 0; j < m; ++j){
+        
+        mat[i] += matrix_gradient[i*m+j] * vecProd[j];
+        // mat2[i] += matrix_gradient2[i*m+j] * this->current_forward_solution[j];
+        mat2[i] = 0.0;
+      }
+    }
+
+    for (int i = 0; i < m; ++i){
+      vec2[i] = this->excitation_gradient2[i] -2.0*mat[i] - mat2[i];
+    }
 
     for (int i = 0; i < m; ++i){
       for (int j = 0; j < m; ++j){
 
-        gradSol[i] += this->inverse_matrix[i*m+j] * (this->forward_excitation_HO_HOPS[j] - this->forward_system_HO_HOPS[j]);
+        vecProd2[i] += this->inverse_matrix[i*m+j] * vec2[j];
 
       }
     }
 
-    for (unsigned int i =0; i < m; ++i)
-    {
-      for (unsigned int j =0; j < m; ++j)
-      {
-        // product[i] += this->matrix_gradient[i*m+j]*this->solution_gradient[j];
-        product[i] += this->matrix_gradient[i*m+j]*gradSol[j];
-      }
-    }
 
     for (int i = 0; i < m; ++i){
-      gradient2 += (-product[i]) * std::conj(this->current_adjoint_solution[i]) * 2.0;
+      gradient2 += /*std::conj(adjoint_excitation_gradient[i])*vecProd[i]*vecProd[i]*/ + std::conj(this->current_adjoint_rhs[i]) * vecProd2[i];
+
     }
+
+
+    // for (int i = 0; i < m; ++i){
+    //   for (int j = 0; j < m; ++j){
+
+    //     gradSol[i] += this->inverse_matrix[i*m+j] * (this->forward_excitation_HO_HOPS[j] - this->forward_system_HO_HOPS[j]);
+
+    //   }
+    // }
+
+    // for (unsigned int i =0; i < m; ++i)
+    // {
+    //   for (unsigned int j =0; j < m; ++j)
+    //   {
+    //     // product[i] += this->matrix_gradient[i*m+j]*this->solution_gradient[j];
+    //     product[i] += this->matrix_gradient[i*m+j]*gradSol[j];
+    //   }
+    // }
+
+    // for (int i = 0; i < m; ++i){
+    //   gradient2 += (-product[i]) * std::conj(this->current_adjoint_solution[i]) * 2.0;
+    // }
     this->gradient2 = gradient2;
     std::cout << "second order gradient: " << gradient2 << std::endl << std::endl;
   }
