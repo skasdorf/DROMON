@@ -27,7 +27,7 @@ Point<spacedim, CoefficientType> compute_E_scattered(DoFHandler<2, spacedim, Coe
   Point<spacedim, CoefficientType> out;
   const unsigned int dim = 2;
   const Real wavelength = 2*constants<Real>::PI/excitation.gamma.imag();
-  const Real R_dist_field = R_dist_scalar*wavelength;
+  const Real R_dist_field = R_dist_scalar;//*wavelength;
   Point<spacedim, Real> r_field = {R_dist_field*sin(theta_sc)*cos(phi_sc), R_dist_field*sin(theta_sc)*sin(phi_sc), R_dist_field*cos(theta_sc)};
 
 

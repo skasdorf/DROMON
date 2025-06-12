@@ -1,0 +1,45 @@
+cmake -G "Visual Studio 17 2022" -A x64 ^
+  -DCMAKE_INSTALL_PREFIX="C:/Users/Crfr/Desktop/GitHub/DROMON" ^
+  -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ^
+  ..\
+
+
+cmake -DCMAKE_BUILD_TYPE=Release ../tests
+make
+
+cmake -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ^
+      -DCMAKE_INSTALL_PREFIX=C:/Users/Crfr/Desktop/Github/DROMON ^
+      -DCMAKE_BUILD_TYPE=Release ^
+      ..
+
+cmake -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ^
+      -DCMAKE_INSTALL_PREFIX=C:/Users/Crfr/Desktop/Github/DROMON ^
+      -DCMAKE_BUILD_TYPE=Release ^
+      ../tests
+
+
+cmake -G "MinGW Makefiles" ^
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/Crfr/Desktop/Github/DROMON ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  ../tests
+
+
+cmake -G "MinGW Makefiles" ^
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ^
+  -DVCPKG_TARGET_TRIPLET=x64-mingw-static ^
+  -DLAPACK_LIBRARIES=openblas ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/Crfr/Desktop/Github/DROMON ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  ..
+
+
+cmake -G "MinGW Makefiles" \
+  -DCMAKE_INSTALL_PREFIX=C:/Users/Crfr/Desktop/Github/DROMON \
+  -DCMAKE_BUILD_TYPE=Release \
+  ..
+
+cmake -G "MinGW Makefiles" \
+  -DCMAKE_INSTALL_PREFIX=C:/Users/Crfr/Desktop/Github/DROMON \
+  -DCMAKE_BUILD_TYPE=Release \
+  ../tests

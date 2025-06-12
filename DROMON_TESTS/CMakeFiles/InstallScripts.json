@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/cmake_install.cmake",
+		"C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/DROMON_BUILD/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

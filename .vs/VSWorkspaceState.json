@@ -1,0 +1,16 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "build\\x64-Release",
+      "install"
+    ]
+  },
+  "ExpandedNodes": [
+    "",
+    "\\DROMON_TESTS",
+    "\\DROMON_TESTS\\CMakeFiles",
+    "\\DROMON_TESTS\\CMakeFiles\\3.30.3"
+  ],
+  "SelectedNode": "\\DROMON_TESTS\\CMakeFiles\\3.30.3\\VCTargetsPath.vcxproj",
+  "PreviewInSolutionExplorer": false
+}

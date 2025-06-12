@@ -14,6 +14,7 @@
 
 
 int main() {
+  std::cout << "=== DROMON HOPS Test Start ===\n";
   using namespace dromon;
 
   //PED
@@ -44,7 +45,7 @@ int main() {
   int runMode = 1;
 
   //1 for material params, 2 for frequency, 3 for radius
-  int perturbVar = 3;
+  int perturbVar = 1;
 
   //perturbation size
   // double perturbSize = 1.0000001;
@@ -66,6 +67,10 @@ int main() {
       case 1:
       {
         std::ifstream inFile("./inputDist/normalDist_eps.txt");
+        if (!inFile.is_open()) {
+            std::cerr << "Error: Could not open inputDist/normalDist_eps.txt\n";
+            return 1;
+        }
         double a;
         while(inFile >> a){
           normalDist.push_back(a);

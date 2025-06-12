@@ -932,6 +932,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation(
 
         const auto r_test = cell_test_geom->r(uv_test);
 
+
         // const auto excitation_dot_au =
         //     excitation.evaluate_excitation_in_direction(r_test, unitary_test_u);
         // const auto excitation_dot_av =
@@ -944,6 +945,7 @@ void EFIEIntegrator<DoFCellType, CoefficientType, Real>::fill_excitation(
 
         const Real jacobian = wgl->at(i_test) * wgl->at(j_test);
         // std::cout << "jacobian: " << jacobian << std::endl;
+        
         for (unsigned int dof_test_index = 0; dof_test_index < mask_test.size();
              ++dof_test_index) {
           if (!mask_test[dof_test_index])

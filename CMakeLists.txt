@@ -1,12 +1,17 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.30)
 
+# Set CMP0167 to allow config-based Boost
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
+project(DROMON
+    DESCRIPTION "DROMON: BEM/MoM Library"
+    VERSION 0.0.1
+)
 set(namespace "DROMON")
-project("DROMON"
-	DESCRIPTION "DROMON: BEM/MoM Library"
-	VERSION 0.0.1
-	)
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -23,8 +28,9 @@ find_package(BLAS REQUIRED)
 #set(BLA_VENDOR "Intel10_64lp")
 find_package(LAPACK REQUIRED)
 find_package(OpenMP REQUIRED)
-find_package(Boost REQUIRED)
-find_package(GSL REQUIRED)
+find_package(boost_filesystem CONFIG REQUIRED)
+find_package(boost_system CONFIG REQUIRED)
+find_package(gsl REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED)
 
@@ -102,7 +108,14 @@ set(public_headers
     )
     
     
-target_link_libraries(${PROJECT_NAME} LAPACK::LAPACK BLAS::BLAS OpenMP::OpenMP_CXX gsl)
+target_link_libraries(${PROJECT_NAME}
+    LAPACK::LAPACK
+    BLAS::BLAS
+    OpenMP::OpenMP_CXX
+    Boost::filesystem
+    Boost::system
+    GSL::gsl
+)
     
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DMKL_Complex16=\"std::complex<double>\"")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DMKL_Complex16=\"std::complex<double>\"")

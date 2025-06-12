@@ -66,6 +66,10 @@ public:
   void fill_adjoint_excitation(AdjointExcitation &adjointExcitation,
                                const unsigned int &ngl_order = 5);
 
+  template <class AdjointExcitation>
+  void fill_adjoint_excitation_perturb(AdjointExcitation &adjointExcitation,
+                               const unsigned int &ngl_order = 5, double perturbSize = 1.0001);                               
+
   //  template <class Excitation>
   //  void fill_excitation(Excitation& excitation);
 
@@ -478,6 +482,24 @@ void GalerkinSystem<dim, spacedim, CoefficientType, Real>::
         cell_adjoint_subexcitation[cell_test.index].get());
   }
 }
+
+template <unsigned int dim, unsigned int spacedim, class CoefficientType,
+          class Real>
+template <class AdjointExcitation>
+void GalerkinSystem<dim, spacedim, CoefficientType, Real>::
+    fill_adjoint_excitation_perturb(AdjointExcitation &adjointExcitation,
+                            const unsigned int &ngl_order, double perturbSize) {
+#ifndef DEBUG
+#pragma omp parallel for
+#endif
+  for (auto &cell_test : (this->dof_handler)->get_dof_parents()) {
+    cell_adjoint_subexcitation[cell_test.index]->zero_out();
+    adjointExcitation.fill_excitation_perturb(
+        cell_test, *cell_dofmask[cell_test.index], ngl_order, perturbSize,
+        cell_adjoint_subexcitation[cell_test.index].get());
+  }
+}
+
 template <unsigned int dim, unsigned int spacedim, class CoefficientType,
           class Real>
 DenseSubVector<CoefficientType> &
