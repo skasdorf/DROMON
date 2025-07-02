@@ -1,38 +1,45 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 7/16/21.
+// Edited by Christopher A. Erickson (Christopher.Erickson@ieee.org) on 7/2/25
 //
 
 #ifndef DROMON_CONFIG_H
 #define DROMON_CONFIG_H
 
-#include <assert.h>
-#include <iostream>
-#include <vector>
-#include <utility>
-#include <limits>
-#include <complex>
+#include <assert.h> // for assertions
+#include <iostream> // for streams (std:cout)
+#include <vector> // for container/pairs
+#include <utility> // for container/pairs
+#include <limits> // for numeric limits
+#include <complex> // for std:complex
 
 #define DROMON_NAMESPACE_OPEN namespace  dromon {
 #define DROMON_NAMESPACE_CLOSE }
 
-
-#define LINEARP 0
+// Polynomial degree macros, named polynomial orders (used for basis functions)
+#define LINEARP 0 
 #define QUADRATICP 1
 #define CUBICP 2
 
 
 DROMON_NAMESPACE_OPEN
+// Directions for degrees of freedom
 enum DoFDirection
 {
     u_dir, v_dir, w_dir
 };
 
+// Types of Surface Currents
 enum CurrentType
 {
     Electric,
     Magnetic,
     Nothing
 };
+
+//Flags to control program behavior (with bitmasks).
+    //e.g., output_active = bit 0
+    //verbose_output = bit 6
 enum UpdateFlags
 {
   update_default = 0,
@@ -40,6 +47,7 @@ enum UpdateFlags
   verbose_output = 0x000040,
   suppress_comments = 0x000002
 };
+
 
 enum RegularityType
 {
@@ -55,14 +63,15 @@ enum RegularityType
 
 enum AdjacencyType
 {
-  Disjoint,
-  Self,
-  Face,
+  Disjoint, //not connected
+  Self, //same cell
+  //specific adjacency
+  Face, 
   Edge,
   Vertex,
 };
-
-inline UpdateFlags
+//Bitwise opperator for UpdateFlags, this lets you combine flags using | and &
+inline UpdateFlags 
 operator|(const UpdateFlags f1, const UpdateFlags f2)
 {
   return static_cast<UpdateFlags>(static_cast<unsigned int>(f1) |

@@ -1,0 +1,3 @@
+C:\msys64\mingw64\bin\cmake.exe -E rm -f CMakeFiles\adaptive.dir/objects.a
+C:\msys64\mingw64\bin\ar.exe qc CMakeFiles\adaptive.dir/objects.a @CMakeFiles\adaptive.dir\objects1.rsp
+C:\msys64\mingw64\bin\c++.exe -O3 -DNDEBUG -DMKL_Complex16="std::complex<double>" -Wl,--whole-archive CMakeFiles\adaptive.dir/objects.a -Wl,--no-whole-archive -o adaptive.exe -Wl,--out-implib,libadaptive.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\adaptive.dir\linkLibs.rsp

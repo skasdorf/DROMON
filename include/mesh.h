@@ -15,6 +15,7 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include <array>
 
 DROMON_NAMESPACE_OPEN
 

@@ -161,17 +161,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named hops
+# Target rules for targets named adaptive
 
 # Build rule for target.
-hops: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 hops
-.PHONY : hops
+adaptive: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 adaptive
+.PHONY : adaptive
 
 # fast build rule for target.
-hops/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/build
-.PHONY : hops/fast
+adaptive/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/build
+.PHONY : adaptive/fast
 
 #=============================================================================
 # Target rules for targets named DROMON
@@ -186,29 +186,29 @@ DROMON/fast:
 	$(MAKE) $(MAKESILENT) -f DROMON_BUILD\CMakeFiles\DROMON.dir\build.make DROMON_BUILD/CMakeFiles/DROMON.dir/build
 .PHONY : DROMON/fast
 
-test_HOPS.obj: test_HOPS.cpp.obj
-.PHONY : test_HOPS.obj
+test_adaptive_refinement_square_plate.obj: test_adaptive_refinement_square_plate.cpp.obj
+.PHONY : test_adaptive_refinement_square_plate.obj
 
 # target to build an object file
-test_HOPS.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/test_HOPS.cpp.obj
-.PHONY : test_HOPS.cpp.obj
+test_adaptive_refinement_square_plate.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/test_adaptive_refinement_square_plate.cpp.obj
+.PHONY : test_adaptive_refinement_square_plate.cpp.obj
 
-test_HOPS.i: test_HOPS.cpp.i
-.PHONY : test_HOPS.i
+test_adaptive_refinement_square_plate.i: test_adaptive_refinement_square_plate.cpp.i
+.PHONY : test_adaptive_refinement_square_plate.i
 
 # target to preprocess a source file
-test_HOPS.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/test_HOPS.cpp.i
-.PHONY : test_HOPS.cpp.i
+test_adaptive_refinement_square_plate.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/test_adaptive_refinement_square_plate.cpp.i
+.PHONY : test_adaptive_refinement_square_plate.cpp.i
 
-test_HOPS.s: test_HOPS.cpp.s
-.PHONY : test_HOPS.s
+test_adaptive_refinement_square_plate.s: test_adaptive_refinement_square_plate.cpp.s
+.PHONY : test_adaptive_refinement_square_plate.s
 
 # target to generate assembly for a file
-test_HOPS.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/test_HOPS.cpp.s
-.PHONY : test_HOPS.cpp.s
+test_adaptive_refinement_square_plate.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/test_adaptive_refinement_square_plate.cpp.s
+.PHONY : test_adaptive_refinement_square_plate.cpp.s
 
 # Help Target
 help:
@@ -223,10 +223,10 @@ help:
 	@echo ... list_install_components
 	@echo ... rebuild_cache
 	@echo ... DROMON
-	@echo ... hops
-	@echo ... test_HOPS.obj
-	@echo ... test_HOPS.i
-	@echo ... test_HOPS.s
+	@echo ... adaptive
+	@echo ... test_adaptive_refinement_square_plate.obj
+	@echo ... test_adaptive_refinement_square_plate.i
+	@echo ... test_adaptive_refinement_square_plate.s
 .PHONY : help
 
 

@@ -275,6 +275,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/hops.dir/DependInfo.cmake"
+  "CMakeFiles/adaptive.dir/DependInfo.cmake"
   "DROMON_BUILD/CMakeFiles/DROMON.dir/DependInfo.cmake"
   )

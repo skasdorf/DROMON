@@ -62,12 +62,12 @@ CMAKE_BINARY_DIR = C:\Users\Crfr\Desktop\Github\DROMON\DROMON_TESTS
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/hops.dir/all
+all: CMakeFiles/adaptive.dir/all
 all: DROMON_BUILD/all
 .PHONY : all
 
 # The main recursive "codegen" target.
-codegen: CMakeFiles/hops.dir/codegen
+codegen: CMakeFiles/adaptive.dir/codegen
 codegen: DROMON_BUILD/codegen
 .PHONY : codegen
 
@@ -76,7 +76,7 @@ preinstall: DROMON_BUILD/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/hops.dir/clean
+clean: CMakeFiles/adaptive.dir/clean
 clean: DROMON_BUILD/clean
 .PHONY : clean
 
@@ -100,36 +100,36 @@ DROMON_BUILD/clean: DROMON_BUILD/CMakeFiles/DROMON.dir/clean
 .PHONY : DROMON_BUILD/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/hops.dir
+# Target rules for target CMakeFiles/adaptive.dir
 
 # All Build rule for target.
-CMakeFiles/hops.dir/all: DROMON_BUILD/CMakeFiles/DROMON.dir/all
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\Crfr\Desktop\Github\DROMON\DROMON_TESTS\CMakeFiles --progress-num=16,17 "Built target hops"
-.PHONY : CMakeFiles/hops.dir/all
+CMakeFiles/adaptive.dir/all: DROMON_BUILD/CMakeFiles/DROMON.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\Crfr\Desktop\Github\DROMON\DROMON_TESTS\CMakeFiles --progress-num=16,17 "Built target adaptive"
+.PHONY : CMakeFiles/adaptive.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/hops.dir/rule: cmake_check_build_system
+CMakeFiles/adaptive.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\Crfr\Desktop\Github\DROMON\DROMON_TESTS\CMakeFiles 17
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/hops.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/adaptive.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\Crfr\Desktop\Github\DROMON\DROMON_TESTS\CMakeFiles 0
-.PHONY : CMakeFiles/hops.dir/rule
+.PHONY : CMakeFiles/adaptive.dir/rule
 
 # Convenience name for target.
-hops: CMakeFiles/hops.dir/rule
-.PHONY : hops
+adaptive: CMakeFiles/adaptive.dir/rule
+.PHONY : adaptive
 
 # codegen rule for target.
-CMakeFiles/hops.dir/codegen:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\Crfr\Desktop\Github\DROMON\DROMON_TESTS\CMakeFiles --progress-num=16,17 "Finished codegen for target hops"
-.PHONY : CMakeFiles/hops.dir/codegen
+CMakeFiles/adaptive.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=C:\Users\Crfr\Desktop\Github\DROMON\DROMON_TESTS\CMakeFiles --progress-num=16,17 "Finished codegen for target adaptive"
+.PHONY : CMakeFiles/adaptive.dir/codegen
 
 # clean rule for target.
-CMakeFiles/hops.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hops.dir\build.make CMakeFiles/hops.dir/clean
-.PHONY : CMakeFiles/hops.dir/clean
+CMakeFiles/adaptive.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\adaptive.dir\build.make CMakeFiles/adaptive.dir/clean
+.PHONY : CMakeFiles/adaptive.dir/clean
 
 #=============================================================================
 # Target rules for target DROMON_BUILD/CMakeFiles/DROMON.dir

@@ -200,6 +200,7 @@ int main() {
       std::cout << "variable-----------------: " << normalDist[i] << std::endl;
 
       //  out2.push_back(output);
+      // Write to output file
       std::complex<double> RCS = 4.0*3.14159*R_dist_scalar*R_dist_scalar*out1*std::conj(out1);
       std::ofstream outFile(saveName, std::ios_base::app);
       outFile << normalDist[i] << "\t" << wave << "\t" << RCS << "\t" << out1 << "\t" << gradient0 <<  "\n";

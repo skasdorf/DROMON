@@ -371,6 +371,7 @@ private:
    */
   double reltol;
   double abstol;
+  // CAE: Why isnt this an input variable?
   unsigned int max_refinement_iters = 12;
 
   bool use_Esc_QoI = false;

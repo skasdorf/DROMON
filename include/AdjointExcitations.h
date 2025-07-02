@@ -1,5 +1,6 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 5/14/22.
+// Edited by Christopher A. Erickson (Christopher.Erickson@ieee.org) on 7/2/25
 //
 
 #ifndef DROMON_ADJOINTEXCITATIONS_H
@@ -20,9 +21,31 @@ namespace Excitations {
 // agnostic to the properties of the discretization, as the excitation
 // for the adjoint problem amounts to processing based on this discretization
 // we must include additional information
+/**
+ * @brief Base class representing adjoint excitations in boundary element formulations.
+ *
+ * Unlike forward problem excitations, adjoint excitations depend explicitly on the discretization,
+ * requiring access to the DoF structures.
+ *
+ * @tparam DoFCellType Type representing a cell with DoFs.
+ * @tparam CoefficientType Type of coefficient storage.
+ * @tparam Real Floating point type (default: double).
+ * @tparam MaterialField Type used for material properties.
+ */
 template <class DoFCellType, class CoefficientType, class Real = double, class MaterialField = double>
 struct AdjointExcitation {
+  /**
+   * @brief Construct an adjoint excitation with specified frequency.
+   *
+   * @param frequency Frequency in Hz.
+   */
   explicit AdjointExcitation(const Real &frequency);
+  /**
+   * @brief Construct an adjoint excitation with specified frequency and exterior material properties.
+   *
+   * @param frequency Frequency in Hz.
+   * @param exterior_material Material properties in the exterior domain.
+   */
   AdjointExcitation(const Real &frequency,
                     const Material<MaterialField> &exterior_material);
 
@@ -34,12 +57,20 @@ struct AdjointExcitation {
   const Material<MaterialField> exterior_material;
   Real wavelength;
 
-
+  /**
+   * @brief Fill the excitation vector contributions for a given test cell.
+   *
+   * @param cell_test The test cell.
+   * @param mask_test Mask indicating active DoFs.
+   * @param ngl Number of quadrature points per dimension.
+   * @param output Pointer to the output vector to fill.
+   */
   virtual void fill_excitation(const DoFCellType &cell_test,
                                   const DoFMask &mask_test,
                                   const unsigned int &ngl,
                                   DenseSubVector<CoefficientType> *output);
 };
+
 template <class DoFCellType, class CoefficientType, class Real, class MaterialField>
 void AdjointExcitation<DoFCellType, CoefficientType, Real,MaterialField>::fill_excitation(
     const DoFCellType &cell_test, const DoFMask &mask_test,
@@ -72,25 +103,56 @@ struct AdjointScatteredFieldExcitation
     : public AdjointExcitation<DoFCellType, CoefficientType, Real,MaterialField> {
   explicit AdjointScatteredFieldExcitation() = default;
 };
-
+/**
+ * @brief Represents the adjoint excitation corresponding to scattered fields in 3D.
+ *
+ * This specialization computes the adjoint contributions associated with far-field scattered fields.
+ *
+ * @tparam CoefficientType Type of coefficient storage.
+ * @tparam Real Floating point type.
+ * @tparam MaterialField Type used for material properties.
+ */
 template <class CoefficientType, class Real, class MaterialField>
 struct AdjointScatteredFieldExcitation<DoFParent<2, 3, Real>, CoefficientType,
                                        Real, MaterialField>
     : public AdjointExcitation<DoFParent<2, 3, Real>, CoefficientType, Real,MaterialField> {
-
+  /**
+   * @brief Construct a scattered field adjoint excitation.
+   *
+   * @param frequency Frequency in Hz.
+   * @param exterior_material Exterior material properties.
+   * @param theta_sc Scattering elevation angle (radians).
+   * @param phi_sc Scattering azimuth angle (radians).
+   * @param isolation_direction Observation direction unit vector.
+   * @param R_dist_field_scalar Scaling factor for far-field distance (default: 200000).
+   */
   AdjointScatteredFieldExcitation(const Real &frequency,
                                            const Real &theta_sc,
                                            const Real &phi_sc,
                                            const Point<3, Real>& isolatation_direction,
                                            const Real &R_dist_field_scalar = 200000.0);
-
+  /**
+   * @brief Construct a scattered field adjoint excitation without explicit material.
+   *
+   * @param frequency Frequency in Hz.
+   * @param theta_sc Scattering elevation angle (radians).
+   * @param phi_sc Scattering azimuth angle (radians).
+   * @param isolation_direction Observation direction unit vector.
+   * @param R_dist_field_scalar Scaling factor for far-field distance (default: 200000).
+   */
   AdjointScatteredFieldExcitation(const Real &frequency,
                                   const Material<MaterialField> &exterior_material,
                                   const Real &theta_sc, const Real &phi_sc,
                                   const Point<3, Real>& isolatation_direction,
                                   const Real &R_dist_field_scalar = 200000.0);
-
-
+  /**
+   * @brief Fill the adjoint excitation contributions for the scattered field.
+   *
+   * @param cell_test The test cell.
+   * @param mask_test Mask indicating active DoFs.
+   * @param ngl Number of quadrature points per dimension.
+   * @param output Pointer to the output vector to fill.
+   */
   void fill_excitation(const DoFParent<2, 3, Real> &cell_test,
                           const DoFMask &mask_test, const unsigned int &ngl,
                           DenseSubVector<CoefficientType> *output) override;
@@ -155,8 +217,7 @@ void AdjointScatteredFieldExcitation<
           // In this case, we must also compute the divergence
           Real dof_div_value =
               dof_test.evaluate_shape_function_divergence(uv_test);
-          // First we have -j\omega\mu*J_S*g and then we have
-          // the second part of k^-2\nabla_S\cdotJ_s \nabla g
+          // First we have $$-j\omega\mu*J_S*g $$ and then we have the second part of $$ k^{-2}\nabla_S\cdot J_s \nabla g$$
           //contributions[dof_trial.active_index] += jacobian*(-constants<Real>::complexj*this->omega*mu*dof_value*dof_vector_value*g + g_prime*(dof_div_value/(this->wavenumber*this->wavenumber)));
           const auto value = jacobian*(-constants<Real>::complexj*this->omega*mu*dof_value*dof_vector_value*g + g_prime*(dof_div_value/(this->wavenumber*this->wavenumber)));
           output->at(dof_test.global_index) += std::conj(this->isolation_direction.dot(value));
@@ -209,23 +270,57 @@ struct AdjointRCSExcitation
     : public AdjointExcitation<DoFCellType, CoefficientType, Real,MaterialField> {
   explicit AdjointRCSExcitation() = default;
 };
-
+/**
+ * @brief Represents an adjoint excitation for computing RCS (Radar Cross Section).
+ *
+ * This excitation incorporates a known scattered field reference for evaluating the RCS.
+ *
+ * @tparam CoefficientType Type of coefficient storage.
+ * @tparam Real Floating point type.
+ * @tparam MaterialField Type used for material properties.
+ */
 template <class CoefficientType, class Real, class MaterialField>
 struct AdjointRCSExcitation<DoFParent<2, 3, Real>, CoefficientType,
                                        Real, MaterialField>
     : public AdjointExcitation<DoFParent<2, 3, Real>, CoefficientType, Real,MaterialField> {
+  /**
+   * @brief Construct an RCS adjoint excitation.
+   *
+   * @param frequency Frequency in Hz.
+   * @param exterior_material Exterior material properties.
+   * @param theta_sc Scattering elevation angle (radians).
+   * @param phi_sc Scattering azimuth angle (radians).
+   * @param scattered_field Reference scattered field vector.
+   * @param R_dist_field_scalar Scaling factor for far-field distance (default: 200000).
+   */
   explicit AdjointRCSExcitation(const Real &frequency,
                                            const Real &theta_sc,
                                            const Real &phi_sc,
                                            const Point<3, std::complex<Real>>& scattered_field,
                                            const Real &R_dist_field_scalar = 200000.0);
+  /**
+   * @brief Construct an RCS adjoint excitation without explicit material.
+   *
+   * @param frequency Frequency in Hz.
+   * @param theta_sc Scattering elevation angle (radians).
+   * @param phi_sc Scattering azimuth angle (radians).
+   * @param scattered_field Reference scattered field vector.
+   * @param R_dist_field_scalar Scaling factor for far-field distance (default: 200000).
+   */
   AdjointRCSExcitation(const Real &frequency,
                                   const Material<MaterialField> &exterior_material,
                                   const Real &theta_sc, const Real &phi_sc,
                                   const Point<3, std::complex<Real>>& scattered_field,
                                   const Real &R_dist_field_scalar = 200000.0);
 
-
+  /**
+   * @brief Fill the adjoint excitation contributions for RCS computation.
+   *
+   * @param cell_test The test cell.
+   * @param mask_test Mask indicating active DoFs.
+   * @param ngl Number of quadrature points per dimension.
+   * @param output Pointer to the output vector to fill.
+   */
   void fill_excitation(const DoFParent<2, 3, Real> &cell_test,
                           const DoFMask &mask_test, const unsigned int &ngl,
                           DenseSubVector<CoefficientType> *output) override;
