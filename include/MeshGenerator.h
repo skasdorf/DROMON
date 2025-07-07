@@ -1,5 +1,6 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 7/18/21.
+// Edited by Christopher A. Erickson (Christopher.Erickson@ieee.org) on 7/3/25
 //
 
 #ifndef DROMON_MESHGENERATOR_H
@@ -8,6 +9,15 @@
 #include "config.h"
 #include "mesh.h"
 #include "Point.h"
+/**
+ * @brief Utility function to compare whether two points have the same coordinates within a tolerance.
+ * 
+ * @tparam dim Dimension of the point.
+ * @tparam Real Numeric type.
+ * @param p1 First point.
+ * @param p2 Second point.
+ * @return True if points are considered equal, false otherwise.
+ */
 template<unsigned int dim, class Real>
 bool is_same_coord(Point<dim, Real> p1, Point<dim, Real> p2) {
         if ((p1-p2).norm() < 1e-12)
@@ -18,19 +28,29 @@ DROMON_NAMESPACE_OPEN
 
     namespace MeshGenerator {
         /**
+         * @brief Generates a hypercube mesh (line, square, or cube) subdivided into cells.
          *
-         * @tparam dim
-         * @tparam spacedim
-         * @tparam Real
-         * @param mesh
-         * @param left
-         * @param right
+         * @tparam dim Topological dimension (1D, 2D, 3D).
+         * @tparam spacedim Embedding space dimension.
+         * @tparam surf_type Type of surface (e.g., number of nodes per edge).
+         * @param mesh Mesh object to be filled.
+         * @param center Center point of the hypercube.
+         * @param sidelength Length of the hypercube side.
+         * @param n_cells_per_dim Number of subdivisions per dimension.
+         *
+         * Generates a hypercube, i.e.,
+         * - a line for dim=1,
+         * - a square for dim=2,
+         * - a cube for dim=3.
          * Generates a hypercube, i.e., a line in dim=1, a square in dim=2, and a cube in dim = 3.
          * The size of the hypercube is described by the tensor product internal $[left, right]^{dim}$.
          */
         template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
         void hyper_cube(Mesh<dim, spacedim, surf_type> &mesh, Point<spacedim, double> center, double sidelength, unsigned int n_cells_per_dim);
-
+        /**
+         * @brief Implementation of hyper_cube.
+         * @see hyper_cube()
+         */
         template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
         void
         dromon::MeshGenerator::hyper_cube(Mesh<dim, spacedim, surf_type> &mesh, Point<spacedim, double> center, double sidelength,
@@ -218,14 +238,29 @@ DROMON_NAMESPACE_OPEN
             //mesh.finalize_geometry(); //This function should make the normals of each patch consistent, etc.
 
         }
-
+        /**
+         * @brief Generates a hypersphere mesh by projecting a hypercube onto the sphere surface.
+         *
+         * @tparam dim Topological dimension.
+         * @tparam spacedim Embedding space dimension.
+         * @tparam surf_type Type of surface.
+         * @param mesh Mesh object to be filled.
+         * @param center Center point of the sphere.
+         * @param sidelength Radius of the sphere.
+         * @param n_subdiv Number of subdivisions per dimension.
+         *
+         * The hypersphere is approximated by projecting the hypercube grid onto a sphere.
+         */
         template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
         void hyper_sphere(Mesh<dim, spacedim, surf_type> &mesh, Point<spacedim, double> center, double sidelength, unsigned int n_subdiv);
-
+        /**
+         * @brief Implementation of hyper_sphere.
+         * @see hyper_sphere()
+         */
         template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
         void
         dromon::MeshGenerator::hyper_sphere(Mesh<dim, spacedim, surf_type> &mesh, Point<spacedim, double> center, double sidelength, unsigned int n_subdiv)
-        {
+        {   //CAE 7/3/25 I dont know if I like this kind of implmentation, why not an isosphere?
             //first, generate a hypercube
             hyper_cube(mesh, center, sidelength, n_subdiv);
             //now, loop through every vertex and project them such that the radius is sidelength
@@ -237,10 +272,23 @@ DROMON_NAMESPACE_OPEN
 
             }
         }
-
+        /**
+         * @brief Generates a flat square plate mesh.
+         *
+         * @tparam dim Topological dimension.
+         * @tparam spacedim Embedding space dimension.
+         * @tparam surf_type Type of surface.
+         * @param mesh Mesh object to be filled.
+         * @param center Center point of the plate.
+         * @param sidelength Length of the plate side.
+         * @param n_cells_per_dim Number of subdivisions per dimension.
+         */
         template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
         void square_plate(Mesh<dim, spacedim, surf_type> &mesh, Point<spacedim, double> center, double sidelength, unsigned int n_cells_per_dim);
-
+        /**
+         * @brief Implementation of square_plate.
+         * @see square_plate()
+         */
         template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
         void
         dromon::MeshGenerator::square_plate(Mesh<dim, spacedim, surf_type> &mesh, Point<spacedim, double> center, double sidelength, unsigned int n_cells_per_dim)
@@ -317,6 +365,23 @@ DROMON_NAMESPACE_OPEN
           mesh.spawn_and_assign_faces();
           //mesh.finalize_geometry(); //This function should make the normals of each patch consistent, etc.
         }
+        /**
+         * @brief Creates a mesh by explicitly providing node coordinates and cell connectivity.
+         *
+         * @tparam dim Topological dimension.
+         * @tparam spacedim Embedding space dimension.
+         * @tparam surf_type Type of surface.
+         * @param mesh Mesh object to be filled.
+         * @param points List of node coordinates.
+         * @param cells List of cells, each defined by a set of node indices.
+         *
+         * This function is useful for custom meshes built from arbitrary point and cell definitions.
+         */
+        template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
+        void create_mesh(
+            Mesh<dim, spacedim, surf_type>& mesh,
+            std::vector<Point<spacedim, double>> points,
+            std::vector<std::array<unsigned int, GeometryInfo<dim, spacedim, surf_type>::nodes_per_cell>> cells);
 
         template<unsigned int dim, unsigned int spacedim, unsigned int surf_type>
         void create_mesh(Mesh<dim, spacedim, surf_type> &mesh, std::vector<Point<spacedim, double>> points, std::vector<std::array<unsigned int, GeometryInfo<dim, spacedim, surf_type>::nodes_per_cell>> cells)

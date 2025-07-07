@@ -28,9 +28,33 @@
 
 namespace Problems {
 using namespace dromon;
+
+/**
+ * @brief A solver for electromagnetic scattering problems using a fixed-order discretization.
+ * 
+ * This solver assembles and solves the EFIE (Electric Field Integral Equation)
+ * system on a given mesh using specified material properties.
+ * 
+ * @tparam dim Topological dimension of the mesh.
+ * @tparam spacedim Embedding space dimension.
+ * @tparam patch_order The surface discretization order.
+ */
+
 template <unsigned int dim, unsigned int spacedim, unsigned int patch_order>
 class RegularSolver {
 public:
+  /**
+   * @brief Constructs the RegularSolver.
+   * 
+   * @param mesh The pointer to the mesh to solve on.
+   * @param mat_dom The pointer to the material data.
+   * @param min_expansion_order Minimum polynomial order for basis functions.
+   * @param max_expansion_order Maximum polynomial order for basis functions.
+   * @param ngl_regular Number of Gauss-Legendre points for regular integrals.
+   * @param ngl_vertex Number of Gauss-Legendre points for vertex singular integrals.
+   * @param ngl_edge Number of Gauss-Legendre points for edge singular integrals.
+   * @param ngl_self Number of Gauss-Legendre points for self-singular integrals.
+   */
   RegularSolver(Mesh<dim, spacedim, patch_order> *mesh,
                 MaterialData<double> *mat_dom,
                 const unsigned int &min_expansion_order = 1,
@@ -47,14 +71,36 @@ public:
     this->initialize_fe_collections();
     this->initialize_dof_handler();
   }
+  /**
+   * @brief Runs the complete workflow: assemble system, build matrix, and solve.
+   */
   void conduct_solution_step();
-
+  /**
+   * @brief Computes the scattered electric field in a monostatic direction.
+   * 
+   * @return The scattered field vector at the observation point.
+   */
   Point<spacedim, std::complex<double>> post_process_scattered_field();
+  /**
+   * @brief Computes the radar cross section (RCS) of the object.
+   * 
+   * @return The RCS value.
+   */
   double post_process_RCS();
+  /**
+   * @brief Initializes the degrees of freedom with a specified finite element index.
+   * 
+   * @param initial_fe_index The FE index to assign to all cells.
+   */
   void initialize_DoF_systems(const unsigned int &initial_fe_index);
   // void initialize_DoF_systems(const std::vector<unsigned int>&
   // initial_fe_indices);
-
+  /**
+   * @brief Sets up the plane wave excitation for the problem.
+   * 
+   * @param frequency The frequency of the plane wave.
+   * @param E_mag The magnitude and phase of the electric field vector.
+   */
   void set_plane_wave_excitation(const double &frequency,
                                  const Point<dim, std::complex<double>> &E_mag);
 
@@ -186,9 +232,33 @@ void RegularSolver<dim, spacedim, patch_order>::set_plane_wave_excitation(
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adaptive Refinement Program
+/**
+ * @brief An adaptive solver for electromagnetic scattering problems using goal-oriented error estimation.
+ * 
+ * This solver supports adaptive p-refinement driven by a quantity of interest
+ * (QoI) error estimate. It can compute sensitivities (gradients) with respect
+ * to design parameters using high-order parameter sampling (HOPS).
+ * 
+ * @tparam dim Topological dimension of the mesh.
+ * @tparam spacedim Embedding space dimension.
+ * @tparam patch_order The surface discretization order.
+ */
 template <unsigned int dim, unsigned int spacedim, unsigned int patch_order>
 class AdaptiveSolver {
 public:
+  /**
+   * @brief Constructs the AdaptiveSolver.
+   * 
+   * @param mesh The low-order mesh pointer.
+   * @param mesh1 The high-order (HOPS) mesh pointer.
+   * @param mat_dom The pointer to the material data.
+   * @param min_expansion_order Minimum polynomial order for basis functions.
+   * @param max_expansion_order Maximum polynomial order for basis functions.
+   * @param ngl_regular Number of Gauss-Legendre points for regular integrals.
+   * @param ngl_vertex Number of Gauss-Legendre points for vertex singular integrals.
+   * @param ngl_edge Number of Gauss-Legendre points for edge singular integrals.
+   * @param ngl_self Number of Gauss-Legendre points for self-singular integrals.
+   */
   AdaptiveSolver(Mesh<dim, spacedim, patch_order> *mesh, Mesh<dim, spacedim, patch_order> *mesh1,
                  MaterialData<double> *mat_dom,
                  const unsigned int &min_expansion_order = 1,
@@ -211,21 +281,82 @@ public:
     this->initialize_dof_handler_HOPS();
 
   }
+  /**
+   * @brief Executes an adaptive refinement cycle, solving forward and adjoint problems and computing gradients.
+   * 
+   * @param adjoint_starting_index Initial finite element index.
+   * @param reltol Relative error tolerance for refinement stopping.
+   * @param forward_matrix Output: assembled forward system matrix.
+   * @param forward_excitation Output: assembled RHS vector.
+   * @param forward_solution Output: solved forward solution.
+   * @param adjoint_solution Output: solved adjoint solution.
+   * @param gradient_solution Output: computed gradient (if HOPS is enabled).
+   * @param sidelength Size parameter (e.g., scatterer radius).
+   * @param HOPSflag Whether to enable high-order perturbation schemes.
+   * @param perturbVar Which variable to perturb (1=permittivity, 2=frequency, 3=radius).
+   * @param perturbSize Perturbation factor (e.g., 1.01 for +1%).
+   * @return An output complex value representing the quantity of interest.
+   */
   auto execute_refinement(const unsigned int& adjoint_starting_index, const double& reltol, std::vector<std::complex<double>> &forward_matrix, std::vector<std::complex<double>> &forward_excitation,
    std::vector<std::complex<double>> &forward_solution, std::vector<std::complex<double>> &adjoint_solution,
    std::complex<double> &gradient_solution, double sidelength, int HOPSflag, int perturbVar, double perturbSize);
+  /**
+   * @brief Runs a full forward and adjoint solve, including HOPS if enabled.
+   */
   void conduct_solution_step();
+  /**
+   * @brief Estimates the discretization error in the quantity of interest.
+   * 
+   * @return The estimated relative error.
+   */
   double estimate_error();
+  /**
+   * @brief Performs adaptive p-refinement based on error indicators.
+   * 
+   * @return True if no further refinement is necessary.
+   */
   bool refine_mesh();
+  /**
+   * @brief Initializes and solves the problem once without refinement.
+   * 
+   * @param adjoint_starting_index Initial finite element index.
+   */
   void solve(const unsigned int& adjoint_starting_index);
-
+  /**
+   * @brief Computes the scattered field based on the current solution.
+   * 
+   * @return The scattered field vector.
+   */
   Point<spacedim, std::complex<double>> post_process_scattered_field();
+  /**
+   * @brief Computes the scattered field based on the current solution.
+   * 
+   * @return The scattered field vector.
+   */
   Point<spacedim, std::complex<double>> post_process_scattered_field_HO();
+  /**
+   * @brief Computes the radar cross section from the forward solution.
+   * 
+   * @return The RCS value.
+   */
   double post_process_RCS();
 
-
+  /**
+   * @brief Configures the plane wave excitation.
+   * 
+   * @param frequency Frequency of the wave.
+   * @param E_mag Electric field vector magnitude.
+   */
   void set_plane_wave_excitation(const double &frequency,
                                  const Point<dim, std::complex<double>> &E_mag);
+  /**
+   * @brief Sets the parameters controlling the scattering quantity of interest (e.g., RCS).
+   * 
+   * @param theta_sc Scattering elevation angle.
+   * @param phi_sc Scattering azimuth angle.
+   * @param R_dist_scalar Distance scaling factor.
+   * @param isolation_direction Observation direction vector. If empty, RCS QoI is used.
+   */
   void
   set_scattering_parameters(const double &theta_sc, const double &phi_sc,
                             const double &R_dist_scalar,
@@ -237,19 +368,76 @@ private:
   std::complex<double> current_total_error;
   double abs_min_error;
   double abs_max_error;
-
+  /**
+   * @brief Outputs solution data and error indicators to VTK files.
+   * 
+   * @param file_name Base filename for output.
+   */
   void output_data(const std::string file_name);
+  /**
+   * @brief Computes the quantity of interest by combining forward and adjoint solutions.
+   */
   void compute_QoI_using_adjoint_solution();
+  /**
+   * @brief Computes the High-Order Parameter Sampling (HOPS) 
+   *
+   * 
+   */
   void HOPS();
+  /**
+   * @brief Computes the outward normals (nHat) of all mesh faces.
+   *
+   * Used for evaluating sensitivity terms related to geometric perturbations.
+   */
   void get_nHat();
+  /**
+   * @brief Returns the center point of a face given its index.
+   * 
+   * @param idx Index of the face.
+   * @return Center point as a 3D coordinate.
+   */
   Point<3, double> get_faceCenter(int idx);
+  /**
+   * @brief Initializes degree of freedom handlers and Galerkin systems for both standard and HOPS meshes.
+   * 
+   * @param initial_fe_index Initial finite element index to assign to cells.
+   */
   void initialize_DoF_systems(const unsigned int &initial_fe_index);
+  /**
+   * @brief Assembles the forward system matrix and RHS for the main problem.
+   *
+   * This method sets masks, distributes DoFs, and prepares the system for solution.
+   */
   void fill_forward_system();
+  /**
+   * @brief Assembles the system matrix and RHS for the High-Order PARAMETER sAMPLING.
+   *
+   * The method can use either the perturbation or the analytical approach.
+   */
   void fill_HOPS_system();
+  /**
+   * @brief Populates the adjoint excitation vector depending on the quantity of interest (QoI).
+   *
+   * Selects between adjoint scattered field and RCS excitations.
+   */
   void fill_adjoint_excitation();
+  /**
+   * @brief Assembles and solves the Galerkin system matrices for forward and adjoint problems.
+   *
+   * Also computes the higher-order forward solution for error estimation.
+   */
   void assemble_and_solve_system_matrix();
+  /**
+   * @brief Builds and analyzes the HOPS system matrix to compute derivative contributions.
+   *
+   * This includes forming the difference between perturbed and unperturbed matrices.
+   */
   void hops_system();
-
+  /**
+   * @brief Initializes finite element collections for the primary solver.
+   *
+   * Adds all expansion orders between min and max order.
+   */
   void initialize_fe_collections() {
     for (unsigned int exps = min_expansion_order; exps <= max_expansion_order;
          ++exps) {
@@ -259,7 +447,11 @@ private:
     }
     fe_collection_collector.push_back(fe_collection_EFIE);
   }
-
+  /**
+   * @brief Initializes finite element collections specifically for HOPS computations.
+   *
+   * Adds all expansion orders between min and max order.
+   */
   void initialize_fe_collections_HOPS() {
     std::cout << "max expansion order: " << max_expansion_order << std::endl;
     for (unsigned int exps = min_expansion_order; exps <= max_expansion_order;
@@ -270,14 +462,18 @@ private:
     }
     fe_collection_collector_HOPS.push_back(fe_collection_EFIE_HOPS);
   }
-
+  /**
+   * @brief Creates and initializes DoF handlers for the main mesh and projection spaces.
+   */
   void initialize_dof_handler() {
     this->dof_handler = std::make_unique<DoFHandler<dim, spacedim>>(
         DoFHandler<dim, spacedim>(*mesh));
     this->dof_handler_projection = std::make_unique<DoFHandler<dim, spacedim>>(
         DoFHandler<dim, spacedim>(*mesh));
   }
-
+  /**
+   * @brief Creates and initializes DoF handlers for the HOPS mesh and its projection space.
+   */
   void initialize_dof_handler_HOPS() {
     this->dof_handler_HOPS = std::make_unique<DoFHandler<dim, spacedim>>(
         DoFHandler<dim, spacedim>(*this->mesh1));
@@ -285,14 +481,17 @@ private:
         DoFHandler<dim, spacedim>(*this->mesh1));
   }
   bool check_error_estimation_correctness = true;
+  /**
+   * @name Solver configuration parameters
+   * @{
+   */
+  const unsigned int min_expansion_order;///< Minimum polynomial order.
+  const unsigned int max_expansion_order;///< Maximum polynomial order.
 
-  const unsigned int min_expansion_order;
-  const unsigned int max_expansion_order;
-
-  const unsigned int ngl_regular;
-  const unsigned int ngl_self;
-  const unsigned int ngl_vertex;
-  const unsigned int ngl_edge;
+  const unsigned int ngl_regular;///< Gauss-Legendre points for regular integrals.
+  const unsigned int ngl_self;///< Gauss-Legendre points for self-singular integrals.
+  const unsigned int ngl_vertex;///< Gauss-Legendre points for vertex singular integrals.
+  const unsigned int ngl_edge;///< Gauss-Legendre points for edge singular integrals.
 
   Mesh<dim, spacedim, patch_order> *mesh;
   Mesh<dim, spacedim, patch_order> *mesh1;
@@ -634,7 +833,7 @@ void AdaptiveSolver<dim, spacedim,
   // Now that we have the lower order forward solution, we must compute the
   // adjoint solution First, reset the unique_ptr for the adjoint excitation
 
-  //Me (maybe):
+  //Me (maybe) (CAE-7/3/25 SK?):
   //order here doesnt matter, the cg_sys has a different adjoint excitation than forward excitation.  
   //So the excitation pointer must be reset before filling, but this could be done directly after filling the forward excitation
   if (use_Esc_QoI) {

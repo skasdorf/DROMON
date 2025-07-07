@@ -26,12 +26,12 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DMKL_Complex16=\"st
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-DNDEBUG -DMKL_Complex16=\"std::complex<double>\"")
 
 # Test target
-#add_executable(hops test_HOPS.cpp)
-add_executable(adaptive test_adaptive_refinement_square_plate.cpp)
+add_executable(hops test_HOPS.cpp)
+#add_executable(adaptive test_adaptive_refinement_square_plate.cpp)
 
 # Link libraries
-#target_link_libraries(hops
-target_link_libraries(adaptive
+target_link_libraries(hops
+#target_link_libraries(adaptive
     DROMON
     Boost::filesystem
     Boost::system
@@ -40,5 +40,5 @@ target_link_libraries(adaptive
     BLAS::BLAS
 )
 
-#target_include_directories(hops PRIVATE "C:/Program Files (x86)/Intel/oneAPI/mkl/latest/include")
-target_include_directories(adaptive PRIVATE "C:/Program Files (x86)/Intel/oneAPI/mkl/latest/include")
+target_include_directories(hops PRIVATE "C:/Program Files (x86)/Intel/oneAPI/mkl/latest/include")
+#target_include_directories(adaptive PRIVATE "C:/Program Files (x86)/Intel/oneAPI/mkl/latest/include")

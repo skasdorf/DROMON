@@ -217,7 +217,7 @@ void AdjointScatteredFieldExcitation<
           // In this case, we must also compute the divergence
           Real dof_div_value =
               dof_test.evaluate_shape_function_divergence(uv_test);
-          // First we have $$-j\omega\mu*J_S*g $$ and then we have the second part of $$ k^{-2}\nabla_S\cdot J_s \nabla g$$
+          // First we have $$-j\omega\mu*J_S*g $$ and then we have the second part of $$k^{-2}\nabla_S\cdot J_s \nabla g$$
           //contributions[dof_trial.active_index] += jacobian*(-constants<Real>::complexj*this->omega*mu*dof_value*dof_vector_value*g + g_prime*(dof_div_value/(this->wavenumber*this->wavenumber)));
           const auto value = jacobian*(-constants<Real>::complexj*this->omega*mu*dof_value*dof_vector_value*g + g_prime*(dof_div_value/(this->wavenumber*this->wavenumber)));
           output->at(dof_test.global_index) += std::conj(this->isolation_direction.dot(value));

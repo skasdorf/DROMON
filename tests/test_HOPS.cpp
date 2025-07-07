@@ -153,7 +153,7 @@ int main() {
 
 
       }
-      wave = 2.99792458e8 / freq;
+      wave = constants<double>::C0 / freq;
       Mesh<2, 3, CUBICP> mesh;
       Point<3, double> center = {0.0, 0.0, 0.0};
 

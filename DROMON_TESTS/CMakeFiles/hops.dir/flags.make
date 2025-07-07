@@ -4,7 +4,7 @@
 # compile CXX with C:/msys64/mingw64/bin/c++.exe
 CXX_DEFINES = -DBOOST_FILESYSTEM_DYN_LINK=1 -DBOOST_FILESYSTEM_NO_LIB
 
-CXX_INCLUDES = @CMakeFiles/adaptive.dir/includes_CXX.rsp
+CXX_INCLUDES = @CMakeFiles/hops.dir/includes_CXX.rsp
 
 CXX_FLAGS = -O3 -DNDEBUG -DMKL_Complex16="std::complex<double>" -fopenmp
 
