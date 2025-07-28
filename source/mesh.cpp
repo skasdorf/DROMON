@@ -1,7 +1,7 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 7/16/21.
 //
-#include "mesh.h"
+#include "DROMON/mesh.h"
 
 template<unsigned int dim, unsigned int spacedim, unsigned int celltype>
 void dromon::Mesh<dim, spacedim, celltype>::push_back_cell(Cell<dim, spacedim, celltype> *cell_pb)

@@ -1,5 +1,6 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 7/19/21.
+// Edited by Christopher A. Erickson (Christopher.Erickson@ieee.org) on 7/2/25
 //
 
 #ifndef DROMON_DATAOUT_H
@@ -15,20 +16,88 @@
 #include <ctime>
 unsigned int vtk_point_index_from_ijk(unsigned int i, unsigned int j, unsigned int order);
 DROMON_NAMESPACE_OPEN
+/**
+ * @brief Class for exporting mesh and degrees-of-freedom data to VTK and auxiliary files.
+ *
+ * @tparam dim       Topological dimension of the mesh (1, 2, or 3).
+ * @tparam spacedim  Embedding space dimension.
+ * @tparam celltype  Integer encoding the cell type/order.
+ * @tparam CoefficientType Type of coefficients (default: std::complex<double>).
+ * @tparam Real      Floating point type for coordinates and data (default: double).
+ *
+ * This class handles writing VTK files (*.vtk) for visualization and optional text files
+ * with detailed mesh and DoF information.
+ */
 
 template <unsigned int dim, unsigned int spacedim, unsigned int celltype, class CoefficientType = std::complex<double>, class Real = double>
 class DataOut {
 public:
+  /**
+   * @brief Attach a mesh to the DataOut object.
+   *
+   * @param mesh Pointer to the mesh.
+   */
   void attach_mesh(Mesh<dim, spacedim, celltype> *mesh);
+  /**
+   * @brief Attach a DoFHandler to the DataOut object.
+   *
+   * @param dof_handler Pointer to the DoFHandler.
+   */
   void attach_dof_handler(DoFHandler<dim, spacedim, CoefficientType, Real> *dof_handler);
-
+  /**
+   * @brief Write VTK file and optional auxiliary data file.
+   *
+   * This method generates:
+   * - A VTK file (*.vtk) containing mesh geometry, cell types, and attached cell data.
+   * - A text file (*.global.dat) containing metadata and optionally DoF information,
+   *   depending on UpdateFlags.
+   */
   void vtk_out();
+  /**
+   * @brief Default constructor. You must attach a mesh before output.
+   */
   DataOut();
+  
+  /**
+   * @brief Constructor with mesh and output file path.
+   *
+   * @param mesh Pointer to the mesh object.
+   * @param file_path Base path for output files (without extension).
+   * @param update_flags Optional flags controlling output behavior.
+   */
   DataOut(Mesh<dim, spacedim, celltype> *mesh, std::string file_path, UpdateFlags update_flags = UpdateFlags::update_default);
+  /**
+   * @brief Constructor with mesh, DoF handler, and output file path.
+   *
+   * @param mesh Pointer to the mesh object.
+   * @param dof_handler Pointer to the DoF handler.
+   * @param file_path Base path for output files (without extension).
+   * @param update_flags Optional flags controlling output behavior.
+   */
   DataOut(Mesh<dim, spacedim, celltype> *mesh, DoFHandler<dim, spacedim, CoefficientType, Real> *dof_handler, std::string file_path, UpdateFlags update_flags = UpdateFlags::update_default);
-
+  /**
+   * @brief Add scalar data associated with each cell.
+   *
+   * @param cell_data Vector of values, one per cell.
+   * @param name Name of the scalar field (used as the VTK variable name).
+   *
+   * @note The vector size must match the number of cells in the attached mesh.
+   */
   void add_cell_data(std::vector<double> &cell_data, std::string name = "default");
+  /**
+   * @brief Add scalar data associated with each node.
+   *
+   * @param node_data Vector of values, one per node.
+   * @param name Name of the scalar field.
+   *
+   * @note This function is declared but not implemented in this version.
+   */
   void add_node_data(std::vector<double> &node_data, std::string name = "default");
+  /**
+   * @brief Set update flags controlling output verbosity and content.
+   *
+   * @param update_flags A combination of UpdateFlags enums.
+   */
   void set_flags(UpdateFlags update_flags);
 
 private:

@@ -1,12 +1,38 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 3/30/22.
+// Edited by Christopher A. Erickson (Christopher.Erickson@ieee.org) on 7/3/25
 //
+/**
+ * @file
+ * @brief Data structures for dense and sparse matrix and vector assembly with numerical stability.
+ *
+ * This header defines classes for:
+ * - Contiguous matrices for efficient storage
+ * - Kahan summation vectors and matrices for compensated summation
+ * - High-order compensated matrices
+ * - Sparse-dense hybrid submatrices and subvectors
+ *
+ * These are used in assembling system matrices and excitation vectors in boundary element formulations.
+ *
+ */
+/**
+ * @defgroup AssemblyContainers
+ * @brief Matrix and vector data structures for numerical assembly.
+ */
 
 #ifndef DROMON_SUBMATRIX_H
 #define DROMON_SUBMATRIX_H
 
 DROMON_NAMESPACE_OPEN
-
+/**
+ * @brief A contiguous 2D matrix with basic accumulation functionality.
+ *
+ * Stores a flat m x n array of coefficients with simple access and update methods.
+ *
+ * @tparam CoefficientType Type of the matrix entries.
+ *
+ * @ingroup AssemblyContainers
+ */
 template <class CoefficientType> class ContiguousMatrix {
 public:
   ContiguousMatrix(const unsigned int &m, const unsigned int &n);
@@ -40,6 +66,15 @@ void ContiguousMatrix<CoefficientType>::accumulate(
   this->operator()(i, j) += value_to_add;
 }
 
+/**
+ * @brief A vector with Neumaier-compensated summation for improved numerical stability.
+ *
+ * Accumulation operations track correction terms to reduce floating-point error.
+ *
+ * @tparam CoefficientType Type of the vector entries.
+ *
+ * @ingroup AssemblyContainers
+ */
 template <class CoefficientType> class KahanVector
 {
 public:
@@ -50,6 +85,11 @@ public:
   unsigned int size();
   void apply_carry();
   std::vector<CoefficientType>& data();
+  /**
+   * @brief Compute the total sum of all entries (excluding any un-applied carry).
+   *
+   * @return The sum of the vector entries.
+   */
   CoefficientType sum() const;
 
 private:
@@ -105,6 +145,15 @@ CoefficientType KahanVector<CoefficientType>::sum() const {
 
   return out;
 }
+/**
+ * @brief A contiguous matrix with Neumaier-compensated summation for each entry.
+ *
+ * Provides stable accumulation of values with per-element carry tracking.
+ *
+ * @tparam CoefficientType Type of the matrix entries.
+ *
+ * @ingroup AssemblyContainers
+ */
 
 template <class CoefficientType> class KahanContiguousMatrix {
 public:
@@ -170,6 +219,15 @@ void KahanContiguousMatrix<CoefficientType>::apply_carry() {
 
   carry = std::vector<CoefficientType>(matrix_data.size(), 0);
 }
+/**
+ * @brief A contiguous matrix with higher-order Kahan summation for increased accuracy.
+ *
+ * Uses Neumaier compensation logic to accumulate values robustly.
+ *
+ * @tparam CoefficientType Type of the matrix entries.
+ *
+ * @ingroup AssemblyContainers
+ */
 
 template <class CoefficientType> class HighOrderKahanContiguousMatrix {
 public:
@@ -231,6 +289,16 @@ void HighOrderKahanContiguousMatrix<CoefficientType>::apply_carry() {
 
   carry = std::vector<CoefficientType>(matrix_data.size(), 0);
 }
+/**
+ * @brief A hybrid sparse-dense submatrix structure with dynamic DoF mapping.
+ *
+ * Allows accumulation into a matrix that is dense in one dimension and sparse in the other.
+ * Also tracks which entries have been filled.
+ *
+ * @tparam CoefficientType Type of the matrix entries.
+ *
+ * @ingroup AssemblyContainers
+ */
 
 template <class CoefficientType> class DenseSubMatrix {
 public:
@@ -249,11 +317,32 @@ public:
 
   const CoefficientType &const_at(const unsigned int &i,
                                   const unsigned int &j) const;
-
+  /**
+   * @brief Generates a mask of which entries in the submatrix have been filled.
+   *
+   * For each (test DoF, trial DoF) pair, marks whether an entry exists in this submatrix.
+   *
+   * @tparam DoFCellType Type representing a cell with DoFs.
+   * @param cell_test Test cell.
+   * @param cell_trial Trial cell.
+   * @param fill_data Output mask matrix.
+   */
   template <class DoFCellType>
   void generate_filled_data(const DoFCellType &cell_test,
                             const DoFCellType &cell_trial,
                             ContiguousMatrix<char> *fill_data) const;
+  /**
+   * @brief Generates a mask of filled entries considering DoF masks.
+   *
+   * Same as the other overload, but respects additional masks indicating active DoFs.
+   *
+   * @tparam DoFCellType Type representing a cell with DoFs.
+   * @param cell_test Test cell.
+   * @param cell_trial Trial cell.
+   * @param test_mask Active DoFs in the test cell.
+   * @param trial_mask Active DoFs in the trial cell.
+   * @param fill_data Output mask matrix.
+   */
   template <class DoFCellType>
   void generate_filled_data(const DoFCellType &cell_test,
                             const DoFCellType &cell_trial,
@@ -411,6 +500,15 @@ template <class CoefficientType>
 unsigned int DenseSubMatrix<CoefficientType>::n_cols() const {
   return n;
 }
+/**
+ * @brief A dense vector supporting dynamic DoF indexing.
+ *
+ * Provides accumulation, access, and reset capabilities for excitation vectors or sub-assemblies.
+ *
+ * @tparam CoefficientType Type of the vector entries.
+ *
+ * @ingroup AssemblyContainers
+ */
 
 template <class CoefficientType> class DenseSubVector {
 public:
@@ -486,8 +584,9 @@ DenseSubVector<CoefficientType>::const_at(const unsigned int &i) const {
 }
 
 /**
- * Zeros out the vector resetting the excitation
- * @tparam CoefficientType
+ * @brief Zeros out the vector, resetting all entries to zero.
+ *
+ * @tparam CoefficientType Type of the vector entries.
  */
 template <class CoefficientType>
 void DenseSubVector<CoefficientType>::zero_out() {

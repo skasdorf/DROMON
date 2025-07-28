@@ -1,3 +1,0 @@
-C:\msys64\mingw64\bin\cmake.exe -E rm -f CMakeFiles\hops.dir/objects.a
-C:\msys64\mingw64\bin\ar.exe qc CMakeFiles\hops.dir/objects.a @CMakeFiles\hops.dir\objects1.rsp
-C:\msys64\mingw64\bin\c++.exe -O3 -DNDEBUG -DMKL_Complex16="std::complex<double>" -Wl,--whole-archive CMakeFiles\hops.dir/objects.a -Wl,--no-whole-archive -o hops.exe -Wl,--out-implib,libhops.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\hops.dir\linkLibs.rsp

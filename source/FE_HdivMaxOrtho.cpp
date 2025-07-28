@@ -1,7 +1,7 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 8/6/21.
 //
-#include "FE_HdivMaxOrtho.h"
+#include "DROMON/FE_HdivMaxOrtho.h"
 
 template <>
 double dromon::FE_HdivMaxOrtho<2, 3, double>::evaluate_shape_function(
@@ -103,4 +103,4 @@ double dromon::FE_HdivMaxOrtho<2, 3, double>::evaluate_shape_function(
 
   return euclidean_scaling[indices_temp(0)]*out;
 }
-#include "FE_HdivMaxOrtho.h"
+

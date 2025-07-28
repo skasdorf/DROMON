@@ -58,7 +58,10 @@ struct Excitation
   virtual Real magnitude() const;
 };
 template < unsigned int spacedim, class Real>
-Excitation<spacedim, Real>::Excitation(const Real& frequency) : frequency(frequency), omega(2*constants<Real>::PI*frequency), gamma(2*constants<Real>::PI*frequency*constants<Real>::ROOT_EPS0MU0_*std::complex<Real>(0,1.0)) {}
+Excitation<spacedim, Real>::Excitation(
+  const Real& frequency) : frequency(frequency),
+  omega(2.0*constants<Real>::PI*frequency),
+  gamma(2.0*constants<Real>::PI*frequency*constants<Real>::ROOT_EPS0MU0_*std::complex<Real>(0.0,1.0)) {}
 
 template <unsigned int spacedim, class Real>
 Point<spacedim, std::complex<Real>>

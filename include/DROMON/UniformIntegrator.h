@@ -12,34 +12,100 @@
 #include "config.h"
 
 DROMON_NAMESPACE_OPEN
-
+/**
+ * @brief A simple integrator that computes uniform contributions over elements.
+ *
+ * This integrator demonstrates how to compute cell-level quantities such as area integrals.
+ * It does not handle singular or near-singular integration.
+ *
+ * @tparam DoFCellType The type representing the cell and its degrees of freedom.
+ * @tparam CoefficientType The numeric type for matrix entries.
+ * @tparam Real The floating-point type (default: double).
+ */
 template <class DoFCellType, class CoefficientType, class Real = double>
 class UniformIntegrator
     : public IntegratorBase<DoFCellType, CoefficientType, Real> {
 public:
+  /**
+   * @brief Default constructor.
+   */
   UniformIntegrator() = default;
   // virtual void attach_quadrature_collection() override;
+  /**
+   * @brief Indicates whether the integrator produces symmetric matrices.
+   * @return Always returns false.
+   */
   virtual bool is_symmetric() const override;
+  /**
+   * @brief Retrieve the name of the integrator.
+   * @return String identifier ("UniformIntegrator").
+   */
   virtual const std::string get_integrator_name() const override;
+  /**
+   * @brief Performs regular integration between two cells.
+   *
+   * For this integrator, only identical cells are considered, and the area is integrated.
+   *
+   * @param cell_test The test cell.
+   * @param cell_trial The trial cell.
+   * @param mask_test Mask for active DoFs in the test cell.
+   * @param mask_trial Mask for active DoFs in the trial cell.
+   * @param output Output matrix to accumulate contributions.
+   */
   virtual void integrate(const DoFCellType &cell_test,
                          const DoFCellType &cell_trial,
                          const DoFMask &mask_test, const DoFMask &mask_trial,
                          DenseSubMatrix<CoefficientType> *output) override;
+  /**
+   * @brief Integrate contributions including material and excitation data.
+   *
+   * Not implemented in this integrator.
+   *
+   * @param cell_test The test cell.
+   * @param cell_trial The trial cell.
+   * @param mask_test Mask for active DoFs in the test cell.
+   * @param mask_trial Mask for active DoFs in the trial cell.
+   * @param material_data Material properties for integration.
+   * @param excitation Incident excitation field.
+   * @param output Output matrix to accumulate contributions.
+   * @param ngl_order Optional quadrature order.
+   */                
   virtual void integrate(const DoFCellType &cell_test,
                          const DoFCellType &cell_trial,
                          const DoFMask &mask_test, const DoFMask &mask_trial,
                          const MaterialData<Real> &material_data,
                          const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation,
                          DenseSubMatrix<CoefficientType> *output, const unsigned int& ngl_order = 0) override;
+  /**
+   * @brief Fill excitation vector contributions for the provided cell.
+   *
+   * Not implemented in this integrator.
+   *
+   * @param cell_test The test cell.
+   * @param mask_test Mask for active DoFs in the test cell.
+   * @param excitation Incident excitation field.
+   * @param ngl Quadrature order.
+   * @param output Output vector to accumulate contributions.
+   */
   virtual void fill_excitation(const DoFCellType &cell_test, const DoFMask &mask_test,  const Excitations::Excitation<DoFCellType::space_dim, Real> &excitation,const unsigned int& ngl, DenseSubVector<CoefficientType> *output) override;
 
 private:
+  /**
+   * @brief Handle integration over near-singular configurations.
+   *
+   * Not implemented in this integrator.
+   */
   void integrate_near_singular(
       const DoFCellType &cell_test, const DoFCellType &cell_trial,
       const DoFMask &mask_test, const DoFMask &mask_trial,
       const RegularityType &regularity,
       const MultiIndex<2, unsigned int> &regularity_local_index,
       DenseSubMatrix<CoefficientType> *output);
+  /**
+   * @brief Handle integration over singular configurations.
+   *
+   * Not implemented in this integrator.
+   */
   void
   integrate_singular(const DoFCellType &cell_test,
                      const DoFCellType &cell_trial, const DoFMask &mask_test,
@@ -47,6 +113,17 @@ private:
                      const RegularityType &regularity,
                      const MultiIndex<2, unsigned int> &regularity_local_index,
                      DenseSubMatrix<CoefficientType> *output);
+  /**
+   * @brief Perform regular integration over the cell.
+   *
+   * Computes area contributions if the test and trial cells are identical.
+   *
+   * @param cell_test The test cell.
+   * @param cell_trial The trial cell.
+   * @param mask_test Mask for active DoFs in the test cell.
+   * @param mask_trial Mask for active DoFs in the trial cell.
+   * @param output Output matrix.
+   */
   void
   integrate_regular(const DoFCellType &cell_test, const DoFCellType &cell_trial,
                     const DoFMask &mask_test, const DoFMask &mask_trial,
