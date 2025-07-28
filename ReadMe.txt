@@ -1,4 +1,7 @@
-ReadMe for DROMON, a C++ Boundary Element Method (BEM)/Method of Moments (MoM) Library by Jake J. Harmon (jake.harmon@ieee.org)
+ReadMe for DROMON, a C++ Boundary Element Method (BEM)/Method of Moments (MoM) Library by:
+Jake J. Harmon (jake.harmon@ieee.org)
+Stephen Kasdorf (Srkasdorf@protonmail.com)
+Christopher Erickson (christopher.erickson@ieee.org)
 
 
 #####################3
