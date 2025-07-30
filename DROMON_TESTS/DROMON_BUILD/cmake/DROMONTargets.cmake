@@ -54,11 +54,11 @@ set_target_properties(DROMON::DROMON PROPERTIES
   INTERFACE_LINK_LIBRARIES "LAPACK::LAPACK;BLAS::BLAS;OpenMP::OpenMP_CXX;Boost::filesystem;Boost::system;GSL::gsl"
 )
 
-# Import target "DROMON::DROMON" for configuration "Release"
-set_property(TARGET DROMON::DROMON APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+# Import target "DROMON::DROMON" for configuration "Debug"
+set_property(TARGET DROMON::DROMON APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
 set_target_properties(DROMON::DROMON PROPERTIES
-  IMPORTED_IMPLIB_RELEASE "C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/DROMON_BUILD/libDROMON.dll.a"
-  IMPORTED_LOCATION_RELEASE "C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/DROMON_BUILD/libDROMON.dll"
+  IMPORTED_IMPLIB_DEBUG "C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/DROMON_BUILD/libDROMONd.dll.a"
+  IMPORTED_LOCATION_DEBUG "C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/DROMON_BUILD/libDROMONd.dll"
   )
 
 # This file does not depend on other imported targets which have

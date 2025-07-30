@@ -1,4 +1,7 @@
-C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/hops.dir
+C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/test_HOPS.dir
+C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/test_adaptive_refinement_square_plate.dir
+C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/test_jacobian_and_unitary_vectors.dir
+C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/test_mesh_generation.dir
 C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/edit_cache.dir
 C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/rebuild_cache.dir
 C:/Users/Crfr/Desktop/Github/DROMON/DROMON_TESTS/CMakeFiles/list_install_components.dir

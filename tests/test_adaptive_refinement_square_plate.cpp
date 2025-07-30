@@ -4,9 +4,13 @@
 #include "DROMON/Point.h"
 #include "DROMON/config.h"
 #include "DROMON/mesh.h"
-
-
+#include "DROMON/DataOut.h"
+#include "DROMON/DoFHandler.h"
+#include "DROMON/FECollection.h"
 #include <iostream>
+#include <iomanip>
+#include <vector>
+#include <complex>
 #include "programs.h"
 
 
@@ -63,7 +67,40 @@ int main() {
     0,                  // perturbVar
     0.01                // perturbSize
   );
-  std::cout << "hello";
+  std::cout << "Refinement Complete";
+  
+  // ---- Mesh Output Section (VTK) ----
+  DoFHandler<2, 3, double> dof_handler(mesh);
+
+  FECollectionCollector<2, 3, double> fe_collection_collector;
+  FECollection<2, 3, double> fe_collection_EFIE;
+
+  unsigned int starting_expansion_order = 1;
+  unsigned int ending_expansion_order = 1; // Keep 1 for mesh-only output
+  for (unsigned int exps = starting_expansion_order; exps <= ending_expansion_order; ++exps) {
+    auto current_fe = FE_HdivMaxOrtho<2, 3, double>(exps, CurrentType::Electric);
+    fe_collection_EFIE.push_back(&current_fe);
+  }
+  fe_collection_collector.push_back(fe_collection_EFIE);
+
+  dof_handler.distribute_dofs(&fe_collection_collector);
+
+  DataOut<2, 3, LINEARP, double, double> data_out(
+      &mesh, "square_plate_mesh", verbose_output | suppress_comments);
+  data_out.attach_dof_handler(&dof_handler);
+
+  std::vector<double> fe_degree_vector;
+  std::vector<double> n_dofs_per_cell;
+
+  for (const auto &dof_cell : dof_handler.get_dof_cells()) {
+    fe_degree_vector.push_back(dof_cell.active_degree(0));
+    n_dofs_per_cell.push_back(dof_handler.get_n_active_dofs_on_cell(dof_cell.index));
+  }
+  data_out.add_cell_data(fe_degree_vector, "fe_degrees");
+  data_out.add_cell_data(n_dofs_per_cell, "dofs_per_cell");
+
+  data_out.vtk_out();
+  std::cout << "VTK mesh output generated: square_plate_mesh.vtk\n";
   return 0;
 }
 

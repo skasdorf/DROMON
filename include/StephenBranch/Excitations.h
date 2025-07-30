@@ -1,6 +1,5 @@
 //
 // Created by Jake J. Harmon (jake.harmon@ieee.org) on 4/10/22.
-// Edited by Christopher A. Erickson (Christopher.Erickson@ieee.org) on 7/2/25
 //
 
 #ifndef DROMON_EXCITATIONS_H
@@ -10,23 +9,9 @@
 DROMON_NAMESPACE_OPEN
 namespace Excitations
 {
-/**
- * @brief Abstract base class for excitations (e.g., incident fields) in simulation.
- *
- * @tparam spacedim The embedding dimension (1, 2, or 3).
- * @tparam Real Floating point type (default: double).
- *
- * This class stores frequency information and defines virtual methods to evaluate
- * the excitation field at a point.
- */
 template<unsigned int spacedim, class Real = double>
 struct Excitation
 {
-  /**
-   * @brief Construct an excitation with a specified frequency.
-   *
-   * @param frequency Frequency in Hz.
-   */
   explicit Excitation(const Real& frequency);
   // const Real freq;
   std::complex<Real> gamma;
@@ -35,98 +20,16 @@ struct Excitation
 
 
   // virtual void set_incident_direction(const Real& theta_inc, const Real& phi_inc);
-  /**
-   * @brief Evaluate the excitation field at point R.
-   *
-   * @param R The spatial position.
-   * @return Complex vector field at R.
-   */
   virtual Point<spacedim, std::complex<Real>> evaluate_excitation(const Point<spacedim, Real>& R) const;
-  /**
-   * @brief Evaluate the excitation projected in a given direction.
-   *
-   * @param R The spatial position.
-   * @param direction The direction vector.
-   * @return Complex scalar projection.
-   */
-  virtual std::complex<Real> evaluate_excitation_in_direction(
-    const Point<spacedim, Real>& R, 
-    const Point<spacedim, Real>& direction) const;
-  /**
-   * @brief Evaluate the excitation projected in a given direction for a material with a specified relative permittivity.
-   *
-   * This method computes the excitation field at point @p R and projects it onto the specified
-   * direction vector, accounting for the material's relative permittivity (epsr).
-   *
-   * @tparam spacedim Embedding dimension (e.g., 2 or 3).
-   * @tparam Real Floating-point type.
-   *
-   * @param R Spatial position where the excitation is evaluated.
-   * @param direction Unit vector specifying the projection direction.
-   * @param epsr Relative permittivity of the material in which the excitation is evaluated.
-   *
-   * @return Complex scalar representing the projected excitation in the given direction.
-   */
-  virtual std::complex<Real> evaluate_excitation_in_direction_mat(
-      const Point<spacedim, Real>& R,
-      const Point<spacedim, Real>& direction,
-      double epsr) const = 0;
-  /**
-   * @brief Evaluate the excitation projected in a given direction under a perturbation.
-   *
-   * This method computes the excitation field at point @p R, projects it onto the given
-   * direction vector, and applies a perturbation to material properties or frequency
-   * depending on @p perturbVar.
-   *
-   * @tparam spacedim Embedding dimension (e.g., 2 or 3).
-   * @tparam Real Floating-point type.
-   *
-   * @param R Spatial position where the excitation is evaluated.
-   * @param direction Unit vector specifying the projection direction.
-   * @param perturbVar Type of perturbation to apply:
-   *   - 1: Perturb relative permittivity
-   *   - 2: Perturb frequency
-   *   - 3: Perturb radius
-   * @param perturbValue Value of the perturbation applied to the selected parameter.
-   *
-   * @return Complex scalar representing the projected excitation with applied perturbation.
-   */
-  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(
-      const Point<spacedim, Real>& R,
-      const Point<spacedim, Real>& direction,
-      int perturbVar,
-      double perturbValue) const = 0;
-  /**
-   * @brief Evaluate the excitation projected in a given direction using the HOPS approximation.
-   *
-   * This method computes the excitation field at point @p R and projects it onto the given
-   * direction vector using the High Order Perturbation Series (HOPS) approach, which
-   * accounts for higher-order field behavior in the simulation.
-   *
-   * @tparam spacedim Embedding dimension (e.g., 2 or 3).
-   * @tparam Real Floating-point type.
-   *
-   * @param R Spatial position where the excitation is evaluated.
-   * @param direction Unit vector specifying the projection direction.
-   *
-   * @return Complex scalar representing the HOPS-approximated projected excitation.
-   */
-  virtual std::complex<Real> evaluate_hops_excitation_in_direction(
-      const Point<spacedim, Real>& R,
-      const Point<spacedim, Real>& direction) const = 0;
-
-    /**
-   * @brief Return the magnitude (norm) of the excitation field.
-   *
-   * @return Scalar magnitude.
-   */
+  virtual std::complex<Real> evaluate_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const;
+  virtual std::complex<Real> evaluate_excitation_in_direction_mat(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, double epsr) const;
+  virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, int perturbVar, double perturbValue) const;
+  virtual std::complex<Real> evaluate_hops_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const;
   virtual Real magnitude() const;
 };
 template < unsigned int spacedim, class Real>
-Excitation<spacedim, Real>::Excitation(
-  const Real& frequency) : frequency(frequency),
-  omega(2.0*constants<Real>::PI*frequency), 
-  gamma(2.0*constants<Real>::PI*frequency*constants<Real>::ROOT_EPS0MU0_*std::complex<Real>(0.0,1.0)) {}
+Excitation<spacedim, Real>::Excitation(const Real& frequency) : frequency(frequency), omega(2.0*constants<Real>::PI*frequency), 
+gamma(2.0*constants<Real>::PI*frequency*constants<Real>::ROOT_EPS0MU0_*std::complex<Real>(0.0,1.0)) {}
 
 template <unsigned int spacedim, class Real>
 Point<spacedim, std::complex<Real>>
@@ -147,99 +50,30 @@ Real Excitation<spacedim, Real>::magnitude() const {
   return Real(0);
 }
 
-// $$E_{inc}(R) = E_{inc_{mag}}*exp(-j*beta*r\cdot n_{inc}_{hat}$$
-// where $$\beta = \omega*sqrt(eps0*mu0)$$
-/**
- * @brief Represents a plane wave excitation.
- *
- * @tparam spacedim Embedding dimension.
- * @tparam Real Floating point type.
- */
+// E_inc(R) = E_inc_mag*exp(-j*beta*r\cdot n_inc_hat
+// where beta = \omega*sqrt(eps0*mu0)
 template<unsigned int spacedim, class Real = double>
 struct PlaneWave : public Excitation<spacedim, Real>
 {
-  /**
-   * @brief Construct a plane wave excitation.
-   *
-   * @param frequency Frequency in Hz.
-   * @param E_mag Field amplitude vector.
-   */
   explicit PlaneWave(const Real& frequency, const Point<spacedim, std::complex<Real>>& E_mag);
-  /**
-   * @brief Evaluate the plane wave field at point R.
-   *
-   * @param R The spatial position.
-   * @return Complex vector field.
-   */
+
   virtual Point<spacedim, std::complex<Real>> evaluate_excitation(const Point<spacedim, Real>& R) const override;
-  /**
-   * @brief Evaluate the plane wave projected in a given direction.
-   *
-   * @param R The spatial position.
-   * @param direction The direction vector.
-   * @return Complex scalar projection.
-   */
   virtual std::complex<Real> evaluate_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const override;
   virtual std::complex<Real> evaluate_excitation_in_direction_mat(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, double epsr) const override;
   virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction, int perturbVar, double perturbValue) const override;
   virtual std::complex<Real> evaluate_hops_excitation_in_direction(const Point<spacedim, Real>& R, const Point<spacedim, Real>& direction) const;
-  /**
-   * @brief Return the magnitude of the field.
-   *
-   * @return Scalar magnitude.
-   */
   virtual Real magnitude() const;
 };
-/**
- * @brief 3D specialization of PlaneWave with incidence angle specification.
- *
- * @tparam Real Floating point type.
- */
+
 template <class Real>
 struct PlaneWave<3, Real> : public Excitation<3, Real> {
-    /**
-   * @brief Construct a 3D plane wave excitation with specified incidence angles.
-   *
-   * @param frequency Frequency in Hz.
-   * @param E_mag Complex vector of field amplitudes in (theta, phi) components.
-   * @param theta_inc Incident elevation angle in radians.
-   * @param phi_inc Incident azimuth angle in radians.
-   */
-  explicit PlaneWave(
-    const Real& frequency, 
-    const Point<2, std::complex<Real>>& E_mag, 
-    const Real& theta_inc, const Real& phi_inc, 
-    const MaterialData<Real> &materialData);
-      /**
-   * @brief Evaluate the 3D plane wave field at point R.
-   *
-   * @param R The spatial position.
-   * @return Complex vector field.
-   */
+  explicit PlaneWave(const Real& frequency, const Point<2, std::complex<Real>>& E_mag, const Real& theta_inc, const Real& phi_inc, const MaterialData<Real> &materialData);
   virtual Point<3, std::complex<Real>> evaluate_excitation(const Point<3, Real>& R) const override;
-    /**
-   * @brief Evaluate the plane wave projected in a direction.
-   *
-   * @param R The spatial position.
-   * @param direction The projection direction.
-   * @return Complex scalar projection.
-   */
   virtual std::complex<Real> evaluate_excitation_in_direction(const Point<3, Real>& R, const Point<3, Real>& direction) const override;
   virtual std::complex<Real> evaluate_excitation_in_direction_mat(const Point<3, Real>& R, const Point<3, Real>& direction, double epsr) const override;
   virtual std::complex<Real> evaluate_excitation_in_direction_perturb(const Point<3, Real>& R, const Point<3, Real>& direction, int perturbVar, double perturbValue) const override;
   virtual std::complex<Real> evaluate_hops_excitation_in_direction(const Point<3, Real>& R, const Point<3, Real>& direction) const;
-  /**
-   * @brief Return the magnitude of the field.
-   *
-   * @return Scalar magnitude.
-   */
   virtual Real magnitude() const override;
-    /**
-   * @brief Set the incident direction using theta and phi angles.
-   *
-   * @param theta_inc Elevation angle in radians.
-   * @param phi_inc Azimuth angle in radians.
-   */
   void set_incident_direction(const Real& theta_inc, const Real& phi_inc);
 
   Point<3, Real> n_hat;
@@ -250,14 +84,9 @@ private:
   Point<3, std::complex<Real>> E_mag_cart;
 };
 template <class Real>
-PlaneWave<3, Real>::PlaneWave(
-  const Real& frequency, 
-  const Point<2, std::complex<Real>>& E_mag, 
-  const Real& theta_inc, const Real& phi_inc, 
-  const MaterialData<Real> &materialData) : Excitation<3, Real>(frequency)
+PlaneWave<3, Real>::PlaneWave(const Real& frequency, const Point<2, std::complex<Real>>& E_mag, const Real& theta_inc, const Real& phi_inc, const MaterialData<Real> &materialData) : Excitation<3, Real>(frequency)
 {
-  //// this needs to be double checked 
-  // CAE 7/28/25 Come back to this to double check
+  //// this needs to be double checked
   const Material<Real> &exterior_material =
       (materialData.get_material_domain(0))
           .get_exterior();

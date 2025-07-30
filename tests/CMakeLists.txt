@@ -25,20 +25,31 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DMKL_Complex16=\"std::complex<double>
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG -DMKL_Complex16=\"std::complex<double>\"")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-DNDEBUG -DMKL_Complex16=\"std::complex<double>\"")
 
-# Test target
-add_executable(hops test_HOPS.cpp)
-#add_executable(adaptive test_adaptive_refinement_square_plate.cpp)
+# Collect all test source files
+file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-# Link libraries
-target_link_libraries(hops
-#target_link_libraries(adaptive
-    DROMON
-    Boost::filesystem
-    Boost::system
-    OpenMP::OpenMP_CXX
-    LAPACK::LAPACK
-    BLAS::BLAS
-)
+foreach(TEST_FILE ${TEST_SOURCES})
+    # Extract the filename without extension
+    get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
+    
+    # Create executable for each test
+    add_executable(${TEST_NAME} ${TEST_FILE})
+    
+    # Link libraries
+    target_link_libraries(${TEST_NAME}
+        DROMON
+        Boost::filesystem
+        Boost::system
+        OpenMP::OpenMP_CXX
+        LAPACK::LAPACK
+        BLAS::BLAS
+    )
 
-target_include_directories(hops PRIVATE "C:/Program Files (x86)/Intel/oneAPI/mkl/latest/include")
-#target_include_directories(adaptive PRIVATE "C:/Program Files (x86)/Intel/oneAPI/mkl/latest/include")
+    # Include directories
+    target_include_directories(${TEST_NAME} PRIVATE
+        "C:/Program Files (x86)/Intel/oneAPI/mkl/latest/include"
+    )
+
+    # Optionally register with CTest
+    add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+endforeach()
