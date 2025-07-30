@@ -39,9 +39,13 @@ cd DROMON_BUILD
 cmake -DCMAKE_INSTALL_PREFIX=/DROMON/INSTALL/DIRECTORY -DCMAKE_BUILD_TYPE=Release /DROMON/LIB/DIRECTORY
 
 ###
-Here this looks like:
+SK: Here this looks like:
 cmake -DCMAKE_INSTALL_PREFIX=$HOME/Documents/DROMON -DCMAKE_BUILD_TYPE=Release ../
-
+CAE: HEre this looks like:
+cmake -G "MinGW Makefiles" \
+  -DCMAKE_INSTALL_PREFIX=C:/Users/Crfr/Desktop/Github/DROMON \
+  -DCMAKE_BUILD_TYPE=Release \
+  ..
 
 # While in the build directory, execute the following
 cmake --build . --target install
@@ -50,6 +54,7 @@ cmake --build . --target install
 # If the library is built and installed for release and debug,
 # the appropriate version will be selected in a find_package call
 # assuming a "config" search
+# CAE: Note here, it seems that when building for debug, it requires a libDromond.dll instead of libDromon.dll 
 
 # Note that the install directory should be set as an environment variable
 # i.e., DROMON_DIR = /installed/directory
@@ -69,13 +74,19 @@ cmake -DCMAKE_BUILD_TYPE=Release ../DROMON/LIB/DIRECTORY/tests
 make
 
 ###
-Here I had to use this instead:
+SK: Here I had to use this instead:
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$HOME/Documents/DROMON-main/cmake ../tests
 
+CAE: Here I had to use this:
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:\Users\Crfr\Desktop\Github\DROMON\cmake  ../tests
+cmake --build .
+
+libDromon.dll is needed to run
 ###
 
 # Finally, execute the following to actually run the tests
 ctest
+CAE: Never got the above to work
 
 # The tests will first run the normal test, then, when included, tests the output files with numdiff
 # Additional files and tests may be added by modifying the CMakeLists.txt file in the tests directory
