@@ -1,0 +1,10 @@
+{
+  "header": {
+    "prefix": "header",
+    "body": [
+      "// Created by Christopher A. Erickson (Christopher.Erickson@ieee.org) on ${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}"
+    ],
+    "description": "C++ file template with header"
+  }
+}
+

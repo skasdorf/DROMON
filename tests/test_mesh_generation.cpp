@@ -42,7 +42,16 @@ int main()
 
 
   dromon::MeshGenerator::create_mesh(mesh, points, cells);
-
+  dromon::Mesh<dim, spacedim, CUBICP> mesh_sphere;
+  dromon::Mesh<dim, spacedim, CUBICP> mesh_almond;
+  Point<spacedim, double> center = {0.0, 0.0, 0.0};
+  double sidelength = 1.0;
+  unsigned int n_cells_per_dim = 3;
+  double d = 9.936;
+  unsigned int Nsamples = 10;
+  dromon::MeshGenerator::hyper_sphere(mesh_sphere, center, sidelength,
+                                          n_cells_per_dim);
+  dromon::MeshGenerator::nasa_almond(mesh_almond, center, d, Nsamples);
   dromon::FECollectionCollector<dim, spacedim, double>
       fe_collection_collector;
   // Create a signle FECollection for the Electric Currents...
@@ -61,11 +70,17 @@ int main()
 
   fe_collection_collector.push_back(fe_collection_EFIE);
 
-  dromon::DoFHandler<dim, spacedim, double> dof_handler(mesh);
+//   dromon::DoFHandler<dim, spacedim, double> dof_handler(mesh);
+  // dromon::DoFHandler<dim, spacedim, double> dof_handler(mesh_sphere);
+  dromon::DoFHandler<dim, spacedim, double> dof_handler(mesh_almond);
   dof_handler.distribute_dofs(&fe_collection_collector);
 
-  dromon::DataOut<dim, spacedim, LINEARP, double, double> data_out(
-      &mesh, "test_mesh_generation", dromon::verbose_output | dromon::suppress_comments);
+  // dromon::DataOut<dim, spacedim, LINEARP, double, double> data_out(
+  //     &mesh, "test_mesh_plane", dromon::verbose_output | dromon::suppress_comments);
+  // dromon::DataOut<dim, spacedim, CUBICP, double, double> data_out(
+  //     &mesh_sphere, "test_mesh_sphere", dromon::verbose_output | dromon::suppress_comments);
+  dromon::DataOut<dim, spacedim, CUBICP, double, double> data_out(
+      &mesh_almond, "test_mesh_almond", dromon::verbose_output | dromon::suppress_comments);
   data_out.attach_dof_handler(&dof_handler);
 
   std::vector<double> fe_degree_vector, n_dofs_per_cell;

@@ -355,7 +355,12 @@ private:
     void
     DataOut<dim, spacedim, celltype, CoefficientType, Real>::add_cell_data(std::vector<double> &cell_data, std::string name) {
         assert(mesh != nullptr && "No mesh is attached to DataOut!");
-        assert(cell_data.size() == mesh->n_cells() && "Size of cell_data does not match the number of cells!");
+        if (cell_data.size() != mesh->n_cells()) {
+            std::cerr << "Assertion failed: cell_data.size() = " << cell_data.size()
+                      << ", mesh->n_cells() = " << mesh->n_cells() << std::endl;
+            assert(cell_data.size() == mesh->n_cells() && "Size of cell_data does not match the number of cells!");
+        }
+
 
           cell_data_doubles.push_back(cell_data);
           if (name == "default")
